@@ -70,6 +70,7 @@ def estimate_data_likelihood(model, loader, K=200):
     data_log_likelihood = []
     with torch.no_grad():
         for batch_id, (data, _) in enumerate(loader):
+            data = data.to(device)
             mean, logvar = model.encoder(data)
             mean = mean.unsqueeze(1).expand(-1, K, -1)
             logvar = logvar.unsqueeze(1).expand(-1, K, -1)
@@ -219,11 +220,11 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
         random_z = random_z.to(device)
 
         generated_train_samples, mean,_ = model(train_samples)
-        generated_train_samples = (F.sigmoid(generated_train_samples)).round().cpu()
+        generated_train_samples = (torch.sigmoid(generated_train_samples)).round().cpu()
         generated_val_samples, _, _ = model(val_samples)
-        generated_val_samples = (F.sigmoid(generated_val_samples)).round().cpu()
+        generated_val_samples = (torch.sigmoid(generated_val_samples)).round().cpu()
         generated_random_samples = model.decoder(random_z)
-        generated_random_samples = (F.sigmoid(generated_random_samples)).round().cpu()
+        generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
 
     if epoch == 0:
         save_image(train_samples, os.path.join(save_dir, "original_train_samples.png"))
@@ -253,7 +254,7 @@ def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_s
             random_z = torch.randn((samples_per_image, latent_size))
             random_z = random_z.to(device)
             generated_random_samples = model.decoder(random_z)
-            generated_random_samples = (F.sigmoid(generated_random_samples)).round().cpu()
+            generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
             generated_random_file = f"generated_random_samples_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
             image_path = os.path.join(save_dir, generated_random_file)
             save_image(generated_random_samples, image_path)
@@ -304,12 +305,10 @@ if __name__ == "__main__":
     generate_samples(model, save_dir=save_dir, epoch=0, train_samples=train_samples, val_samples=val_samples, random_z=random_z)
     print_model_summary(model, optimizer, save_dir=save_dir)
 
-    estimate_data_likelihood(model, val_loader, K=200)
-
-    #generate_random_samples(model, save_dir, epoch=0)
-
     train_elbos, val_elbos, epoch_time = train(model, optimizer, train_loader, val_loader, loss_fn, epochs=epochs,
                                                save_dir=save_dir, save_interval=save_interval, log_interval=log_interval)
+
+    # generate_random_samples(model, save_dir, epoch=0)
 
     #Report Results
     test_elbo = epoch_eval(model, test_loader, loss_fn)
