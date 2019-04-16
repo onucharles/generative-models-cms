@@ -26,7 +26,7 @@ def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
 
     with open(test_path) as f:
         lines = f.readlines()
-    x_test = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])[
+    x_test = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])
     x_test = x_test.reshape(x_test.shape[0], 1, 28, 28)
     y_test = np.zeros((x_test.shape[0], 1))
     test = data.TensorDataset(torch.from_numpy(x_test).float(), torch.from_numpy(y_test))
