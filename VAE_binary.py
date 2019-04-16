@@ -181,11 +181,11 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
     if best:
         generated_train_path = os.path.join(save_dir, f"generated_train_samples_best.png")
         generated_val_path = os.path.join(save_dir, f"generated_val_samples_best.png")
-        generated_random_path = os.path.join(save_dir, f"generated_val_samples_best.png")
+        generated_random_path = os.path.join(save_dir, f"generated_random_samples_best.png")
     else:
         generated_train_path = os.path.join(save_dir, f"generated_train_samples_{epoch}.png")
         generated_val_path = os.path.join(save_dir, f"generated_val_samples_{epoch}.png")
-        generated_random_path = os.path.join(save_dir, f"generated_val_samples_{epoch}.png")
+        generated_random_path = os.path.join(save_dir, f"generated_random_samples_{epoch}.png")
 
     save_image(generated_train_samples, generated_train_path)
     save_image(generated_val_samples, generated_val_path)
