@@ -98,9 +98,14 @@ class VAE(nn.Module):
         self.encoder = Encoder()
         self.decoder = Decoder()
 
+
+    def reparametrize(self, mean, logvar):
+        epsilon = torch.randn_like(logvar)
+        z = mean + torch.exp(logvar / 2) * epsilon
+        return z
+
     def forward(self, x):
         mean, logvar = self.encoder(x)
-        epsilon = torch.randn_like(logvar)
-        z = mean + torch.exp(logvar/2) * epsilon
+        z = self.reparametrize(mean, logvar)
         x_tilde_logits = self.decoder(z)
         return x_tilde_logits, mean, logvar
