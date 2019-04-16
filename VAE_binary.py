@@ -112,6 +112,7 @@ def evaluate_batch_likelihood(model, x, z_samples, image_size=(1,28,28)):
     return batch_log_likelihood
 
 
+#Train for one epoch
 def epoch_train(model, optimizer, loader, loss_fn, epoch, log_interval=None):
     model.train()
     elbo = []
@@ -129,6 +130,7 @@ def epoch_train(model, optimizer, loader, loss_fn, epoch, log_interval=None):
     return np.mean(np.array(elbo))
 
 
+#Evaluate the model on a specific dataloader
 def epoch_eval(model, loader, loss_fn):
     model.eval()
     elbo = []
@@ -140,6 +142,7 @@ def epoch_eval(model, loader, loss_fn):
     return np.mean(np.array(elbo))
 
 
+#Train the model for a number of epochs
 def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.curdir, save_interval=None, log_interval=None):
     train_elbos = []
     val_elbos = []
@@ -176,6 +179,7 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir 
     return train_elbos, val_elbos, epoch_time
 
 
+#Save the model and the training statistics
 def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, best_model=False):
     if best_model:
         path = os.path.join(save_dir, f'model_best.pt')
@@ -199,6 +203,7 @@ def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save
         writer.writerows([[stats[key][j] for key in fieldnames] for j in epochs])
 
 
+#Print the model architecture and hyperparameters
 def print_model_summary(model, optimizer, save_dir = None):
     f = io.StringIO()
     with redirect_stdout(f):
@@ -213,6 +218,7 @@ def print_model_summary(model, optimizer, save_dir = None):
             file.write(architechture_summary)
 
 
+#Generate original samples vs reconstructed samples for the training and validation sets, plus some random samples
 def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_z, best=False):
     with torch.no_grad():
         train_samples = train_samples.to(device)
@@ -244,6 +250,7 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
     save_image(generated_random_samples, generated_random_path)
 
 
+#Generate a num_samples random samples
 def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_size=100):
     samples_per_image = 64
     with torch.no_grad():
@@ -260,6 +267,7 @@ def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_s
             save_image(generated_random_samples, image_path)
 
 
+#Hyperparameters
 batch_size = 64
 lr = 3e-4
 epochs = 20
@@ -305,10 +313,12 @@ if __name__ == "__main__":
     generate_samples(model, save_dir=save_dir, epoch=0, train_samples=train_samples, val_samples=val_samples, random_z=random_z)
     print_model_summary(model, optimizer, save_dir=save_dir)
 
+    #Train Model
     train_elbos, val_elbos, epoch_time = train(model, optimizer, train_loader, val_loader, loss_fn, epochs=epochs,
                                                save_dir=save_dir, save_interval=save_interval, log_interval=log_interval)
 
-    # generate_random_samples(model, save_dir, epoch=0)
+    #generate num_samples random samples
+    # generate_random_samples(model, save_dir, epoch=epochs-1, num_samples=500)
 
     #Report Results
     test_elbo = epoch_eval(model, test_loader, loss_fn)
@@ -326,5 +336,3 @@ if __name__ == "__main__":
         results_path = os.path.join(save_dir, 'results.text')
         with open(results_path, 'w') as file:
             file.write(results_summary)
-
-
