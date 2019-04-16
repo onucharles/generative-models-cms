@@ -68,6 +68,7 @@ class Elbo_CE(nn.Module):
 #K is the number of importance samples
 def estimate_data_likelihood(model, loader, K=200):
     data_log_likelihood = []
+    print("Evaluating Likelihood .", end="")
     with torch.no_grad():
         for batch_id, (data, _) in enumerate(loader):
             data = data.to(device)
@@ -77,6 +78,8 @@ def estimate_data_likelihood(model, loader, K=200):
             z_samples = model.reparametrize(mean, logvar)
             batch_log_likelihood = evaluate_batch_likelihood(model, data.reshape((data.shape[0], -1)), z_samples)
             data_log_likelihood += batch_log_likelihood.tolist()
+            print(".", end="")
+    print("\n", end="")
     return data_log_likelihood
 
 
@@ -176,7 +179,7 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir 
         save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, False)
         generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
                          val_samples=val_samples, random_z=random_z)
-    return train_elbos, val_elbos, epoch_time
+    return train_elbos, val_elbos, epoch_time[-1]
 
 
 #Save the model and the training statistics
@@ -328,9 +331,9 @@ if __name__ == "__main__":
     validation_log_likelihood = sum(validation_log_likelihood) / len(validation_log_likelihood)
     test_log_likelihood = estimate_data_likelihood(model, test_loader)
     test_log_likelihood = sum(test_log_likelihood) / len(test_log_likelihood)
-    results_summary = f"Epoch: {epochs - 1}, Train Elbo: {train_elbos[-1]}, Validation Elbo: {val_elbos[-1]}, Test Elbo: {test_elbo}, " \
-        f"Training Log Likelihood: {training_log_likelihood}, Validation Log Likelihood: {validation_log_likelihood}," \
-        f"Test Log Likelihood: {test_log_likelihood}, Epoch Time: {epoch_time}"
+    results_summary = f"Epoch: {epochs - 1}, Train Elbo: {train_elbos[-1]:.2f}, Validation Elbo: {val_elbos[-1]:.2f}, Test Elbo: {test_elbo:.2f}, " \
+        f"Training Log Likelihood: {training_log_likelihood:.2f}, Validation Log Likelihood: {validation_log_likelihood:.2f}, " \
+        f"Test Log Likelihood: {test_log_likelihood:.2f}, Epoch Time: {epoch_time:.2f}"
     print(results_summary)
     if save_interval is not None:
         results_path = os.path.join(save_dir, 'results.text')
