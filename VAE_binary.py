@@ -1,4 +1,5 @@
 import numpy as np
+from models import VAE
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -17,7 +18,7 @@ from contextlib import redirect_stdout
 def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
     with open(train_path) as f:
         lines = f.readlines()
-    x_train = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])[:1000] ####
+    x_train = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])
     x_train = x_train.reshape(x_train.shape[0], 1, 28, 28)
     y_train = np.zeros((x_train.shape[0], 1))
     train = data.TensorDataset(torch.from_numpy(x_train), torch.from_numpy(y_train))
@@ -25,7 +26,7 @@ def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
 
     with open(test_path) as f:
         lines = f.readlines()
-    x_test = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])[:1000] ####
+    x_test = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])[
     x_test = x_test.reshape(x_test.shape[0], 1, 28, 28)
     y_test = np.zeros((x_test.shape[0], 1))
     test = data.TensorDataset(torch.from_numpy(x_test).float(), torch.from_numpy(y_test))
@@ -33,83 +34,12 @@ def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
 
     with open(val_path) as f:
         lines = f.readlines()
-    x_val = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])[:1000] ####
+    x_val = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])
     x_val = x_val.reshape(x_val.shape[0], 1, 28, 28)
     y_val= np.zeros((x_val.shape[0], 1))
     validation = data.TensorDataset(torch.from_numpy(x_val).float(), torch.from_numpy(y_val))
     val_loader = data.DataLoader(validation, batch_size=batch_size, shuffle=False)
     return (train_loader, val_loader, test_loader)
-
-
-class Encoder(nn.Module):
-    def __init__(self):
-        super(Encoder, self).__init__()
-        self.conv0 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3, 3), padding=1)
-        self.pool0 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-        self.conv1 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1)
-        self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(7, 7), padding=0)
-        self.linear_mean = nn.Linear(in_features=256, out_features=100, bias=True)
-        self.linear_logvar= nn.Linear(in_features=256, out_features=100, bias=True)
-        self.elu = nn.ELU(alpha=1.)
-
-    def forward(self, x):
-        x = self.conv0(x)
-        x = self.elu(x)
-        x = self.pool0(x)
-        x = self.conv1(x)
-        x = self.elu(x)
-        x = self.pool1(x)
-        x = self.conv2(x)
-        x = self.elu(x)
-        x = x.view(x.size(0), -1)
-        mean = self.linear_mean(x)
-        logvar = self.linear_logvar(x)
-        return mean, logvar
-
-
-class Decoder(nn.Module):
-    def __init__(self):
-        super(Decoder, self).__init__()
-        self.linear = nn.Linear(in_features=100, out_features=256, bias=True)
-        self.conv0 = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=(5, 5), padding=4)
-        #self.upsample0 = nn.Upsample(scale_factor=2, mode='bilinear')
-        self.conv1 = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), padding=2)
-        #self.upsample1 = nn.Upsample(scale_factor=2, mode='bilinear')
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=16, kernel_size=(3, 3), padding=2)
-        self.conv3 = nn.Conv2d(in_channels=16, out_channels=1, kernel_size=(3, 3), padding=2)
-        self.elu = nn.ELU(alpha=1.)
-        #self.sigmoid = nn.Sigmoid()
-
-    def forward(self, z):
-        z = self.linear(z)
-        z = z.unsqueeze(-1).unsqueeze(-1)
-        z = self.elu(z)
-        z = self.conv0(z)
-        z = self.elu(z)
-        z = F.interpolate(z, scale_factor=2, mode='bilinear')
-        z = self.conv1(z)
-        z = self.elu(z)
-        z = F.interpolate(z, scale_factor=2, mode='bilinear')
-        z = self.conv2(z)
-        z = self.elu(z)
-        x_tilde_logits = self.conv3(z)
-        #x_tilde = self.sigmoid(v)
-        return x_tilde_logits
-
-
-class VAE(nn.Module):
-    def __init__(self):
-        super(VAE, self).__init__()
-        self.encoder = Encoder()
-        self.decoder = Decoder()
-
-    def forward(self, x):
-        mean, logvar = self.encoder(x)
-        epsilon = torch.randn_like(logvar)
-        z = mean + torch.exp(logvar/2) * epsilon
-        x_tilde_logits = self.decoder(z)
-        return x_tilde_logits, mean, logvar
 
 
 #ELBO using Cross Entropy reconstruction loss
@@ -239,10 +169,8 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
 
         generated_train_samples, mean,_ = model(train_samples)
         generated_train_samples = (F.sigmoid(generated_train_samples)).round().cpu()
-
         generated_val_samples, _, _ = model(val_samples)
         generated_val_samples = (F.sigmoid(generated_val_samples)).round().cpu()
-
         generated_random_samples = model.decoder(random_z)
         generated_random_samples = (F.sigmoid(generated_random_samples)).round().cpu()
 
@@ -258,12 +186,13 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
         generated_train_path = os.path.join(save_dir, f"generated_train_samples_{epoch}.png")
         generated_val_path = os.path.join(save_dir, f"generated_val_samples_{epoch}.png")
         generated_random_path = os.path.join(save_dir, f"generated_val_samples_{epoch}.png")
+
     save_image(generated_train_samples, generated_train_path)
     save_image(generated_val_samples, generated_val_path)
     save_image(generated_random_samples, generated_random_path)
 
 
-batch_size = 4 ####
+batch_size = 64
 lr = 3e-4
 epochs = 20
 save_interval = 3 #save model every save_interval epochs (None for not saving)
