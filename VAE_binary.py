@@ -280,7 +280,7 @@ else:
 if __name__ == "__main__":
     #Load Data
     train_path = "binarized_mnist_train.amat"
-    val_path = "binarized_mnist_val.amat"
+    val_path = "binarized_mnist_valid.amat"
     test_path = "binarized_mnist_test.amat"
     train_loader, val_loader, test_loader = load_data(train_path, test_path, val_path, batch_size=batch_size)
 
