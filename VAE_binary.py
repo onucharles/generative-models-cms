@@ -12,6 +12,7 @@ import csv
 import torchsummary
 import io
 from contextlib import redirect_stdout
+from math import ceil
 
 
 #Load Dataset
@@ -19,7 +20,7 @@ def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
     with open(train_path) as f:
         lines = f.readlines()
     x_train = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])
-    x_train = x_train.reshape(x_train.shape[0], 1, 28, 28)
+    x_train = x_train.reshape((x_train.shape[0], 1, 28, 28))
     y_train = np.zeros((x_train.shape[0], 1))
     train = data.TensorDataset(torch.from_numpy(x_train), torch.from_numpy(y_train))
     train_loader = data.DataLoader(train, batch_size=batch_size, shuffle=True)
@@ -27,7 +28,7 @@ def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
     with open(test_path) as f:
         lines = f.readlines()
     x_test = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])
-    x_test = x_test.reshape(x_test.shape[0], 1, 28, 28)
+    x_test = x_test.reshape((x_test.shape[0], 1, 28, 28))
     y_test = np.zeros((x_test.shape[0], 1))
     test = data.TensorDataset(torch.from_numpy(x_test).float(), torch.from_numpy(y_test))
     test_loader = data.DataLoader(test, batch_size=batch_size, shuffle=False)
@@ -35,7 +36,7 @@ def load_data(train_path=None, test_path=None, val_path=None, batch_size=32):
     with open(val_path) as f:
         lines = f.readlines()
     x_val = np.array([[np.float32(i) for i in line.split(' ')] for line in lines])
-    x_val = x_val.reshape(x_val.shape[0], 1, 28, 28)
+    x_val = x_val.reshape((x_val.shape[0], 1, 28, 28))
     y_val= np.zeros((x_val.shape[0], 1))
     validation = data.TensorDataset(torch.from_numpy(x_val).float(), torch.from_numpy(y_val))
     val_loader = data.DataLoader(validation, batch_size=batch_size, shuffle=False)
@@ -50,10 +51,10 @@ class Elbo_CE(nn.Module):
     def forward(self, x, x_tilde_logits, mean, logvar):
         #std = torch.exp(logvar/2)
         #log_encoder = -0.5 * torch.sum(((z - mean)/std)**2,-1) - 0.5 * torch.sum(torch.log(2*np.pi*std**2),-1)
-        #log_prior = -0.5 * torch.sum(z ** 2, -1) - 0.5 * torch.sum(torch.log(2 * np.pi), -1)
+        #log_prior = -0.5 * torch.sum(z ** 2, -1) - 0.5 * z.shape[-1] * np.log(2 * np.pi)
 
-        x = x.reshape(x.shape[0],-1)
-        x_tilde_logits = x_tilde_logits.reshape(x_tilde_logits.shape[0], -1)
+        x = x.reshape((x.shape[0],-1))
+        x_tilde_logits = x_tilde_logits.reshape((x_tilde_logits.shape[0], -1))
 
         # Analytical KL divergence for a standard normal distribution prior and a
         # multivariate normal distribution with diagonal covariance q(z|x)
@@ -62,6 +63,52 @@ class Elbo_CE(nn.Module):
         #log_decoder = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1) #log likelihood (- cross entropy)
         loss = -(log_decoder - kl).mean()
         return loss
+
+
+#K is the number of importance samples
+def estimate_data_likelihood(model, loader, K=200):
+    data_log_likelihood = []
+    with torch.no_grad():
+        for batch_id, (data, _) in enumerate(loader):
+            mean, logvar = model.encoder(data)
+            mean = mean.unsqueeze(1).expand(-1, K, -1)
+            logvar = logvar.unsqueeze(1).expand(-1, K, -1)
+            z_samples = model.reparametrize(mean, logvar)
+            batch_log_likelihood = evaluate_batch_likelihood(model, data.reshape((data.shape[0], -1)), z_samples)
+            data_log_likelihood += batch_log_likelihood.tolist()
+    return data_log_likelihood
+
+
+#Evaluate batch log-likelihood using importance sampling
+#x is of size (batch_size M, features_size D)
+#z_samples is of size ((batch_size M, importance samples K, latent size L)
+def evaluate_batch_likelihood(model, x, z_samples, image_size=(1,28,28)):
+    with torch.no_grad():
+        z_samples = z_samples.to(device)
+        x = x.to(device)
+
+        M = x.shape[0]; D = x.shape[1];
+        K = z_samples.shape[1]; L = z_samples.shape[2];
+
+        mean, logvar = model.encoder(x.reshape((M, image_size[0], image_size[1], image_size[2])))
+        std = torch.exp(logvar / 2)
+        x_tilde_logits = model.decoder(z_samples.reshape((M*K, L)))
+        x_tilde_logits = x_tilde_logits.reshape((M, K, D))
+
+        x = x.unsqueeze(1).expand(-1, K, -1)
+        mean = mean.unsqueeze(1).expand(-1, K, -1)
+        std = std.unsqueeze(1).expand(-1, K, -1)
+
+        log_encoder_zi = -0.5 * torch.sum(((z_samples - mean)/std)**2, -1) - 0.5 * torch.sum(torch.log(2*np.pi*std**2), -1)
+        log_prior_zi = -0.5 * torch.sum(z_samples ** 2, -1) - 0.5 * L * np.log(2 * np.pi)
+        log_decoder_zi = -torch.sum(F.binary_cross_entropy_with_logits(input=x_tilde_logits, target=x, reduction="none")
+                                    , dim=-1)
+        log_term = log_decoder_zi + log_prior_zi - log_encoder_zi
+
+        #LogSumExp trick
+        max_log_term, _ = log_term.max(dim=-1, keepdim=True)
+        batch_log_likelihood = -np.log(K) + max_log_term.squeeze(-1) + (log_term - max_log_term).exp().sum(-1).log()
+    return batch_log_likelihood
 
 
 def epoch_train(model, optimizer, loader, loss_fn, epoch, log_interval=None):
@@ -121,7 +168,11 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir 
 
         print(f"-> Epoch {epoch},\t Train ELBO: {train_elbo:.2f},\t Validation ELBO: {val_elbo:.2f},\t "
               f"Max Validation ELBO: {max_val_elbo:.2f},\t Epoch Time: {epoch_time_:.2f} seconds")
-    return train_elbos, val_elbos
+    if save_interval is not None:
+        save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, False)
+        generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
+                         val_samples=val_samples, random_z=random_z)
+    return train_elbos, val_elbos, epoch_time
 
 
 def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, best_model=False):
@@ -192,6 +243,22 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
     save_image(generated_random_samples, generated_random_path)
 
 
+def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_size=100):
+    samples_per_image = 64
+    with torch.no_grad():
+        num_images = ceil(num_samples / samples_per_image)
+        for k in range(1, num_images +1):
+            if k == num_images and num_samples%samples_per_image != 0:
+                samples_per_image = num_samples%samples_per_image
+            random_z = torch.randn((samples_per_image, latent_size))
+            random_z = random_z.to(device)
+            generated_random_samples = model.decoder(random_z)
+            generated_random_samples = (F.sigmoid(generated_random_samples)).round().cpu()
+            generated_random_file = f"generated_random_samples_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
+            image_path = os.path.join(save_dir, generated_random_file)
+            save_image(generated_random_samples, image_path)
+
+
 batch_size = 64
 lr = 3e-4
 epochs = 20
@@ -237,8 +304,28 @@ if __name__ == "__main__":
     generate_samples(model, save_dir=save_dir, epoch=0, train_samples=train_samples, val_samples=val_samples, random_z=random_z)
     print_model_summary(model, optimizer, save_dir=save_dir)
 
-    train(model, optimizer, train_loader, val_loader, loss_fn, epochs=epochs,
-          save_dir=save_dir, save_interval=save_interval, log_interval=log_interval)
+    estimate_data_likelihood(model, val_loader, K=200)
 
+    #generate_random_samples(model, save_dir, epoch=0)
+
+    train_elbos, val_elbos, epoch_time = train(model, optimizer, train_loader, val_loader, loss_fn, epochs=epochs,
+                                               save_dir=save_dir, save_interval=save_interval, log_interval=log_interval)
+
+    #Report Results
+    test_elbo = epoch_eval(model, test_loader, loss_fn)
+    training_log_likelihood = estimate_data_likelihood(model, train_loader)
+    training_log_likelihood = sum(training_log_likelihood) / len(training_log_likelihood)
+    validation_log_likelihood = estimate_data_likelihood(model, val_loader)
+    validation_log_likelihood = sum(validation_log_likelihood) / len(validation_log_likelihood)
+    test_log_likelihood = estimate_data_likelihood(model, test_loader)
+    test_log_likelihood = sum(test_log_likelihood) / len(test_log_likelihood)
+    results_summary = f"Epoch: {epochs - 1}, Train Elbo: {train_elbos[-1]}, Validation Elbo: {val_elbos[-1]}, Test Elbo: {test_elbo}, " \
+        f"Training Log Likelihood: {training_log_likelihood}, Validation Log Likelihood: {validation_log_likelihood}," \
+        f"Test Log Likelihood: {test_log_likelihood}, Epoch Time: {epoch_time}"
+    print(results_summary)
+    if save_interval is not None:
+        results_path = os.path.join(save_dir, 'results.text')
+        with open(results_path, 'w') as file:
+            file.write(results_summary)
 
 
