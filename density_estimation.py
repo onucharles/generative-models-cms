@@ -70,6 +70,7 @@ plt.plot(xx,estimate)
 plt.plot(f(torch.from_numpy(xx)).numpy(), d(torch.from_numpy(xx)).numpy()**(-1)*N(xx))
 plt.legend(['Estimated','True'])
 plt.title('Estimated vs True')
+plt.show()
 
 
 
