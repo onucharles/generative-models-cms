@@ -67,7 +67,7 @@ class Elbo_CE(nn.Module):
 
 #K is the number of importance samples
 #This functions loads the data from the loader, samples k z_i from the q(z|x_i) for each x_i,
-#and calls evaluate_batch_likelihood to get the likelihood using importance sampling
+#and calls evaluate_batch_likelihood function to get the likelihood using importance sampling
 def estimate_data_likelihood(model, loader, K=200):
     data_log_likelihood = []
     print("Evaluating Likelihood .", end="")
