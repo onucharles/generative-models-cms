@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from util import load_data
 from torch.utils import data
 from torchvision.utils import save_image
 import time
