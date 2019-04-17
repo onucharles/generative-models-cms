@@ -338,6 +338,6 @@ if __name__ == "__main__":
         f"Test Log Likelihood: {test_log_likelihood:.2f}, Epoch Time: {epoch_time:.2f}"
     print(results_summary)
     if save_interval is not None:
-        results_path = os.path.join(save_dir, 'results.text')
+        results_path = os.path.join(save_dir, 'results.txt')
         with open(results_path, 'w') as file:
             file.write(results_summary)
