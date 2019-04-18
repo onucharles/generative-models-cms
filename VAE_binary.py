@@ -174,18 +174,24 @@ def print_model_summary(model, optimizer, save_dir = None):
 
 
 #Generate original samples vs reconstructed samples for the training and validation sets, plus some random samples
-def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_z, best=False):
+def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_z, model_outputs_logits=True, best=False):
     with torch.no_grad():
         train_samples = train_samples.to(device)
         val_samples = val_samples.to(device)
         random_z = random_z.to(device)
 
         generated_train_samples, mean,_ = model(train_samples)
-        generated_train_samples = (torch.sigmoid(generated_train_samples)).round().cpu()
         generated_val_samples, _, _ = model(val_samples)
-        generated_val_samples = (torch.sigmoid(generated_val_samples)).round().cpu()
         generated_random_samples = model.decoder(random_z)
-        generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
+
+        if model_outputs_logits:
+            generated_train_samples = (torch.sigmoid(generated_train_samples)).round().cpu()
+            generated_val_samples = (torch.sigmoid(generated_val_samples)).round().cpu()
+            generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
+        else:
+            generated_train_samples = generated_train_samples.cpu()
+            generated_val_samples = generated_val_samples.cpu()
+            generated_random_samples = generated_random_samples.cpu()
 
     if epoch == 0:
         save_image(train_samples, os.path.join(save_dir, "original_train_samples.png"))
@@ -206,7 +212,7 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
 
 
 #Generate a num_samples random samples
-def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_size=100):
+def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_size=100, model_outputs_logits=True):
     samples_per_image = 64
     with torch.no_grad():
         num_images = ceil(num_samples / samples_per_image)
@@ -216,7 +222,10 @@ def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_s
             random_z = torch.randn((samples_per_image, latent_size))
             random_z = random_z.to(device)
             generated_random_samples = model.decoder(random_z)
-            generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
+            if model_outputs_logits:
+                generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
+            else:
+                generated_random_samples = generated_random_samples.cpu()
             generated_random_file = f"generated_random_samples_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
             image_path = os.path.join(save_dir, generated_random_file)
             save_image(generated_random_samples, image_path)
