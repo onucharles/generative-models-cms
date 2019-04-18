@@ -217,23 +217,70 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
 
 
 #Generate a num_samples random samples
-def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_size=100, model_outputs_logits=True):
-    samples_per_image = 64
+def generate_random_samples(model, save_dir, random_z_samples=None, epoch=-1, num_samples=200, latent_size=100,
+                            model_outputs_logits=True, samples_per_image=64, generated_random_file="generated_random_samples"):
     with torch.no_grad():
         num_images = ceil(num_samples / samples_per_image)
         for k in range(1, num_images +1):
             if k == num_images and num_samples%samples_per_image != 0:
                 samples_per_image = num_samples%samples_per_image
-            random_z = torch.randn((samples_per_image, latent_size))
+            if random_z_samples is None:
+                random_z = torch.randn((samples_per_image, latent_size))
+            else:
+                try:
+                    random_z = random_z_samples[(k-1)*samples_per_image:k*samples_per_image]
+                except:
+                    if len(random_z_samples) < k*samples_per_image:
+                        print("random_z_samples are too small for the number of images requested")
             random_z = random_z.to(device)
             generated_random_samples = model.decoder(random_z)
             if model_outputs_logits:
                 generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
             else: #assuming input images are in the range of -1 and 1
                 generated_random_samples = ((generated_random_samples + 1) / 2).cpu()
-            generated_random_file = f"generated_random_samples_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
+            generated_random_file += f"_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
             image_path = os.path.join(save_dir, generated_random_file)
             save_image(generated_random_samples, image_path)
+
+
+#Generate an interpolated image between two images generated given two latent variables
+#random_z_1 and random_z_2 with factor alpha x = alpha*x_0 + (a-alpha)*x_1
+def generate_interpolated_samples(model, save_dir, alphas, interpolate_images=False, random_z_0=None, random_z_1=None, epoch=-1, num_samples=64, latent_size=100,
+                            model_outputs_logits=False, generated_random_file="generated_random_samples_interpolated"):
+    save_dir = os.path.join(save_dir, "interpolation_samples")
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    with torch.no_grad():
+        if (random_z_0 is None) or (random_z_1 is None):
+            random_z_0 = torch.randn((num_samples, latent_size))
+            random_z_1 = torch.randn((num_samples, latent_size))
+        random_z_0 = random_z_0.to(device)
+        random_z_1 = random_z_1.to(device)
+        if interpolate_images:
+            generated_images_0 = model.decoder(random_z_0)
+            generated_images_1 = model.decoder(random_z_1)
+            for alpha in alphas:
+                generated_images = alpha*generated_images_0 + (1-alpha) * generated_images_1
+                if model_outputs_logits:
+                    generated_images = (torch.sigmoid(generated_images)).round().cpu()
+                else:  # assuming input images are in the range of -1 and 1
+                    generated_images = ((generated_images + 1) / 2).cpu()
+                generated_random_file += f"_images_alpha_{alpha}_epoch_{epoch}.png"
+                image_path = os.path.join(save_dir, generated_random_file)
+                save_image(generated_images, image_path)
+        else:
+            for alpha in alphas:
+                random_z = alpha*random_z_0 + (1-alpha)*random_z_1
+                generated_images = model.decoder(random_z)
+                if model_outputs_logits:
+                    generated_images = (torch.sigmoid(generated_images)).round().cpu()
+                else:  # assuming input images are in the range of -1 and 1
+                    generated_images = ((generated_images + 1) / 2).cpu()
+                generated_random_file += f"_latent_alpha_{alpha}_epoch_{epoch}.png"
+                image_path = os.path.join(save_dir, generated_random_file)
+                save_image(generated_images, image_path)
+
+
 
 
 #Hyperparameters
