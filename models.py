@@ -152,15 +152,15 @@ class Encoder2(nn.Module):
         self.conv0 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0)
         self.batchnorm0 = nn.BatchNorm2d(32)
         self.conv1 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0)
-        self.batchnorm1 = nn.BatchNorm2d(32)
+        self.batchnorm1 = nn.BatchNorm2d(64)
         self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(3, 3), padding=0)
         self.batchnorm2 = nn.BatchNorm2d(256)
         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         self.conv3 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=(6, 6), padding=0)
         self.batchnorm2 = nn.BatchNorm2d(512)
-        self.linear_mean = nn.Linear(in_features=256, out_features=100, bias=True)
-        self.linear_logvar = nn.Linear(in_features=256, out_features=100, bias=True)
+        self.linear_mean = nn.Linear(in_features=512, out_features=100, bias=True)
+        self.linear_logvar = nn.Linear(in_features=512, out_features=100, bias=True)
         self.elu = nn.ELU(alpha=1.)
 
     def forward(self, x):
@@ -187,8 +187,8 @@ class Encoder2(nn.Module):
 class Decoder2(nn.Module):
     def __init__(self):
         super(Decoder2, self).__init__()
-        self.linear = nn.Linear(in_features=100, out_features=256, bias=True)
-        self.conv0 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3, 3), padding=4)
+        self.linear = nn.Linear(in_features=100, out_features=512, bias=True)
+        self.conv0 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=(3, 3), padding=4)
         self.batchnorm0 = nn.BatchNorm2d(256)
         self.conv1 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=(3, 3), padding=2)
         self.batchnorm1 = nn.BatchNorm2d(128)
