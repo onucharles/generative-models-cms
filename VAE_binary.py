@@ -98,7 +98,8 @@ def epoch_eval(model, loader, loss_fn):
 
 
 #Train the model for a number of epochs
-def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.curdir, save_interval=None, log_interval=None, model_outputs_logits=True):
+def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.curdir, save_interval=None, log_interval=None,
+          model_outputs_logits=True, train_samples=None, val_samples=None, random_z=None):
     train_elbos = []
     val_elbos = []
     epoch_time = []
@@ -188,14 +189,18 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
             generated_train_samples = (torch.sigmoid(generated_train_samples)).round().cpu()
             generated_val_samples = (torch.sigmoid(generated_val_samples)).round().cpu()
             generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
-        else:
-            generated_train_samples = generated_train_samples.cpu()
-            generated_val_samples = generated_val_samples.cpu()
-            generated_random_samples = generated_random_samples.cpu()
+        else: #assuming input images are in the range of -1 and 1
+            generated_train_samples = ((generated_train_samples + 1) / 2).cpu()
+            generated_val_samples = ((generated_val_samples + 1) / 2).cpu()
+            generated_random_samples = ((generated_random_samples + 1) / 2).cpu()
 
     if epoch == 0:
-        save_image(train_samples, os.path.join(save_dir, "original_train_samples.png"))
-        save_image(val_samples, os.path.join(save_dir, "original_val_samples.png"))
+        if model_outputs_logits:
+            save_image(train_samples, os.path.join(save_dir, "original_train_samples.png"))
+            save_image(val_samples, os.path.join(save_dir, "original_val_samples.png"))
+        else:  # assuming input images are in the range of -1 and 1
+            save_image((train_samples + 1) / 2, os.path.join(save_dir, "original_train_samples.png"))
+            save_image((val_samples + 1) / 2, os.path.join(save_dir, "original_val_samples.png"))
 
     if best:
         generated_train_path = os.path.join(save_dir, f"generated_train_samples_best.png")
@@ -224,8 +229,8 @@ def generate_random_samples(model, save_dir, epoch=-1, num_samples=200, latent_s
             generated_random_samples = model.decoder(random_z)
             if model_outputs_logits:
                 generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
-            else:
-                generated_random_samples = generated_random_samples.cpu()
+            else: #assuming input images are in the range of -1 and 1
+                generated_random_samples = ((generated_random_samples + 1) / 2).cpu()
             generated_random_file = f"generated_random_samples_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
             image_path = os.path.join(save_dir, generated_random_file)
             save_image(generated_random_samples, image_path)
@@ -279,7 +284,8 @@ if __name__ == "__main__":
 
     #Train Model
     train_elbos, val_elbos, epoch_time = train(model, optimizer, train_loader, val_loader, loss_fn, epochs=epochs,
-                                               save_dir=save_dir, save_interval=save_interval, log_interval=log_interval)
+                                               save_dir=save_dir, save_interval=save_interval, log_interval=log_interval,
+                                               train_samples=train_samples, val_samples=val_samples, random_z=random_z)
 
     #generate num_samples random samples
     # generate_random_samples(model, save_dir, epoch=epochs-1, num_samples=500)
