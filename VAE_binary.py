@@ -265,8 +265,8 @@ def generate_interpolated_samples(model, save_dir, alphas, interpolate_images=Fa
                     generated_images = (torch.sigmoid(generated_images)).round().cpu()
                 else:  # assuming input images are in the range of -1 and 1
                     generated_images = ((generated_images + 1) / 2).cpu()
-                generated_random_file += f"_images_alpha_{alpha}_epoch_{epoch}.png"
-                image_path = os.path.join(save_dir, generated_random_file)
+                generated_random_file_ = generated_random_file + f"_images_alpha_{alpha}_epoch_{epoch}.png"
+                image_path = os.path.join(save_dir, generated_random_file_)
                 save_image(generated_images, image_path)
         else:
             for alpha in alphas:
@@ -276,8 +276,8 @@ def generate_interpolated_samples(model, save_dir, alphas, interpolate_images=Fa
                     generated_images = (torch.sigmoid(generated_images)).round().cpu()
                 else:  # assuming input images are in the range of -1 and 1
                     generated_images = ((generated_images + 1) / 2).cpu()
-                generated_random_file += f"_latent_alpha_{alpha}_epoch_{epoch}.png"
-                image_path = os.path.join(save_dir, generated_random_file)
+                generated_random_file_ = generated_random_file + f"_latent_alpha_{alpha}_epoch_{epoch}.png"
+                image_path = os.path.join(save_dir, generated_random_file_)
                 save_image(generated_images, image_path)
 
 
