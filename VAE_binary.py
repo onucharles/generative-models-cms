@@ -98,7 +98,7 @@ def epoch_eval(model, loader, loss_fn):
 
 
 #Train the model for a number of epochs
-def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.curdir, save_interval=None, log_interval=None):
+def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.curdir, save_interval=None, log_interval=None, model_outputs_logits=True):
     train_elbos = []
     val_elbos = []
     epoch_time = []
@@ -117,20 +117,20 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir 
             if save_interval is not None:
                 save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, True)
                 generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
-                                 val_samples=val_samples, random_z=random_z, best=True)
+                                 val_samples=val_samples, random_z=random_z, model_outputs_logits=model_outputs_logits, best=True)
 
         if save_interval is not None:
             if epoch % save_interval == 0:
                 save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, False)
                 generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
-                                 val_samples=val_samples, random_z=random_z)
+                                 val_samples=val_samples, random_z=random_z, model_outputs_logits=model_outputs_logits)
 
         print(f"-> Epoch {epoch},\t Train ELBO: {train_elbo:.2f},\t Validation ELBO: {val_elbo:.2f},\t "
               f"Max Validation ELBO: {max_val_elbo:.2f},\t Epoch Time: {epoch_time_:.2f} seconds")
     if save_interval is not None:
         save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, False)
         generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
-                         val_samples=val_samples, random_z=random_z)
+                         val_samples=val_samples, random_z=random_z, model_outputs_logits=model_outputs_logits)
     return train_elbos, val_elbos, epoch_time[-1]
 
 
@@ -159,18 +159,18 @@ def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save
 
 
 #Print the model architecture and hyperparameters
-def print_model_summary(model, optimizer, save_dir = None):
+def print_model_summary(model, optimizer, save_dir=None, input_size=(1,28,28)):
     f = io.StringIO()
     with redirect_stdout(f):
         print(optimizer)
-        torchsummary.summary(model, (1, 28, 28))
-    architechture_summary = f.getvalue()
-    print(architechture_summary)
+        torchsummary.summary(model, input_size)
+    architecture_summary = f.getvalue()
+    print(architecture_summary)
 
     if save_dir is not None:
         architecture_path = os.path.join(save_dir, 'architecture.txt')
         with open(architecture_path, 'w') as file:
-            file.write(architechture_summary)
+            file.write(architecture_summary)
 
 
 #Generate original samples vs reconstructed samples for the training and validation sets, plus some random samples
