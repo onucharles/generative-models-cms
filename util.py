@@ -44,15 +44,14 @@ def load_data(train_path, test_path, val_path=None, batch_size=32, train_val_rat
     return (train_loader, val_loader, test_loader)
 
 
-image_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((.5, .5, .5),
-                         (.5, .5, .5))
-])
-
-
 #Load SVHN Dataset
 def load_SVHN(dataset_location, batch_size):
+    image_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((.5, .5, .5),
+                             (.5, .5, .5))
+    ])
+
     trainvalid = torchvision.datasets.SVHN(
         dataset_location, split='train',
         download=True,
