@@ -256,7 +256,7 @@ if __name__ == "__main__":
     #Create Save Directory
     save_parent_dir = os.curdir
     model_folder = "VAE_binary_model_"
-    previous_folders = [f for f in os.listdir(save_parent_dir) if (model_folder in f and os.path.isdir("bob"))]
+    previous_folders = [f for f in os.listdir(save_parent_dir) if (model_folder in f and os.path.isdir(f))]
     if not previous_folders:
         save_dir = os.path.join(save_parent_dir, model_folder + f'{1:03d}')
     else:
