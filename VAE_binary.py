@@ -1,5 +1,5 @@
 import numpy as np
-from models import VAE, Elbo_CE
+from models import VAE, Elbo_BCE
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -260,7 +260,7 @@ if __name__ == "__main__":
     model = VAE()
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    loss_fn = Elbo_CE()
+    loss_fn = Elbo_BCE()
 
     train_samples, _ = next(iter(train_loader))
     val_samples, _ = next(iter(val_loader))
