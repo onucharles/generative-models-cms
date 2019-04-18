@@ -158,7 +158,7 @@ class Encoder2(nn.Module):
         self.batchnorm2 = nn.BatchNorm2d(256)
         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         self.conv3 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=(6, 6), padding=0)
-        self.batchnorm2 = nn.BatchNorm2d(512)
+        self.batchnorm3 = nn.BatchNorm2d(512)
         self.linear_mean = nn.Linear(in_features=512, out_features=100, bias=True)
         self.linear_logvar = nn.Linear(in_features=512, out_features=100, bias=True)
         self.elu = nn.ELU(alpha=1.)
