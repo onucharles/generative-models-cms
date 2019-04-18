@@ -191,7 +191,7 @@ class Decoder2(nn.Module):
         self.batchnorm0 = nn.BatchNorm2d(256)
         self.conv1 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=(3, 3), padding=2)
         self.batchnorm1 = nn.BatchNorm2d(128)
-        self.conv2 = nn.Conv2d(in_channels=128, out_channels=32, kernel_size=(3, 3), padding=0)
+        self.conv2 = nn.Conv2d(in_channels=128, out_channels=32, kernel_size=(3, 3), padding=2)
         self.batchnorm2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=3, kernel_size=(3, 3), padding=0)
         self.elu = nn.ELU(alpha=1.)
