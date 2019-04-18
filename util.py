@@ -60,7 +60,7 @@ def load_SVHN(dataset_location, batch_size):
     )
 
     trainset_size = int(len(trainvalid) * 0.9)
-    trainset, validset = dataset.random_split(
+    trainset, validset = data.random_split(
         trainvalid,
         [trainset_size, len(trainvalid) - trainset_size]
     )
