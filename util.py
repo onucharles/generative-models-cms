@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch.utils import data
 import torchvision.datasets
+import torchvision.transforms as transforms
 
 #Load Dataset
 def load_data(train_path, test_path, val_path=None, batch_size=32, train_val_ratio=0.8):
@@ -41,6 +42,13 @@ def load_data(train_path, test_path, val_path=None, batch_size=32, train_val_rat
     val_loader = data.DataLoader(validation, batch_size=batch_size, shuffle=False)
     test_loader = data.DataLoader(test, batch_size=batch_size, shuffle=False)
     return (train_loader, val_loader, test_loader)
+
+
+image_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((.5, .5, .5),
+                         (.5, .5, .5))
+])
 
 
 #Load SVHN Dataset
