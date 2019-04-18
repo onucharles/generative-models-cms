@@ -178,7 +178,6 @@ class Encoder2(nn.Module):
         x = self.conv3(x)
         x = self.elu(x)
         x = self.batchnorm3(x)
-        x = self.pool3(x)
         x = x.view(x.size(0), -1)
         mean = self.linear_mean(x)
         logvar = self.linear_logvar(x)
