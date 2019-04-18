@@ -218,7 +218,7 @@ class VAE(nn.Module):
         return x_tilde_logits, mean, logvar
 
 
-#ELBO using Binary Cross Entropy reconstruction loss (bernoulli p(x|z))
+#ELBO using Binary Cross Entropy reconstruction loss (decoder p(x|z) as Bernoulli distribution)
 class Elbo_BCE(nn.Module):
     def __init__(self):
         super(Elbo_BCE, self).__init__()
@@ -239,23 +239,18 @@ class Elbo_BCE(nn.Module):
         loss = -(log_decoder - kl).mean()
         return loss
 
-#ELBO using p(x|z) as normal distribution with variance of 1
+#ELBO using decoder p(x|z) as normal distribution with variance of 1
 class Elbo_Normal(nn.Module):
     def __init__(self):
-        super(Elbo_CE, self).__init__()
+        super(Elbo_Normal, self).__init__()
 
-    def forward(self, x, x_tilde_logits, mean, logvar):
-        #std = torch.exp(logvar/2)
-        #log_encoder = -0.5 * torch.sum(((z - mean)/std)**2,-1) - 0.5 * torch.sum(torch.log(2*np.pi*std**2),-1)
-        #log_prior = -0.5 * torch.sum(z ** 2, -1) - 0.5 * z.shape[-1] * np.log(2 * np.pi)
-
+    def forward(self, x, x_tilde, mean, logvar):
         x = x.reshape((x.shape[0],-1))
-        x_tilde_logits = x_tilde_logits.reshape((x_tilde_logits.shape[0], -1))
+        x_tilde = x_tilde.reshape((x_tilde.shape[0], -1))
 
         # Analytical KL divergence for a standard normal distribution prior and a
         # multivariate normal distribution with diagonal covariance q(z|x)
         kl = 0.5 * (-logvar - 1 + mean**2 + torch.exp(logvar)).sum(dim=-1)
-        log_decoder = -torch.sum(F.binary_cross_entropy_with_logits(input=x_tilde_logits, target=x, reduction="none"), dim=-1)
-        #log_decoder = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1) #log likelihood (- cross entropy)
+        log_decoder = -0.5 * torch.sum((x - x_tilde)**2, -1) - 0.5 * x.shape[1] * np.log(2 * np.pi)
         loss = -(log_decoder - kl).mean()
         return loss
