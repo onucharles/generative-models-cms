@@ -60,24 +60,24 @@ def load_SVHN(dataset_location, batch_size):
     )
 
     trainset_size = int(len(trainvalid) * 0.9)
-    trainset, validset = data.random_split(
+    trainset, validset = data.dataset.random_split(
         trainvalid,
         [trainset_size, len(trainvalid) - trainset_size]
     )
 
-    train_loader = torch.utils.data.DataLoader(
+    train_loader = data.DataLoader(
         trainset,
         batch_size=batch_size,
         shuffle=True,
         num_workers=2
     )
 
-    val_loader = torch.utils.data.DataLoader(
+    val_loader = data.DataLoader(
         validset,
         batch_size=batch_size,
     )
 
-    test_loader = torch.utils.data.DataLoader(
+    test_loader = data.DataLoader(
         torchvision.datasets.SVHN(
             dataset_location, split='test',
             download=True,
