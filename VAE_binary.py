@@ -238,8 +238,8 @@ def generate_random_samples(model, save_dir, random_z_samples=None, epoch=-1, nu
                 generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
             else: #assuming input images are in the range of -1 and 1
                 generated_random_samples = ((generated_random_samples + 1) / 2).cpu()
-            generated_random_file += f"_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
-            image_path = os.path.join(save_dir, generated_random_file)
+            generated_random_file_ = generated_random_file + f"_epoch_{epoch}_numsamples_{num_samples}_{k:03d}.png"
+            image_path = os.path.join(save_dir, generated_random_file_)
             save_image(generated_random_samples, image_path)
 
 
