@@ -156,8 +156,10 @@ class Encoder2(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(3, 3), padding=1)
         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         self.conv3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(4, 4), padding=0)
-        self.linear_mean = nn.Linear(in_features=256, out_features=100, bias=True)
-        self.linear_logvar = nn.Linear(in_features=256, out_features=100, bias=True)
+        self.linear_mean_1 = nn.Linear(in_features=256, out_features=256, bias=True)
+        self.linear_mean_1 = nn.Linear(in_features=256, out_features=100, bias=True)
+        self.linear_logvar_1 = nn.Linear(in_features=256, out_features=256, bias=True)
+        self.linear_logvar_2 = nn.Linear(in_features=256, out_features=100, bias=True)
         self.elu = nn.ELU(alpha=1.)
 
     def forward(self, x):
@@ -173,14 +175,19 @@ class Encoder2(nn.Module):
         x = self.conv3(x)
         x = self.elu(x)
         x = x.view(x.size(0), -1)
-        mean = self.linear_mean(x)
-        logvar = self.linear_logvar(x)
+        mean = self.linear_mean_1(x)
+        mean = self.elu(mean)
+        mean = self.linear_mean_2(mean)
+        logvar = self.linear_logvar_1(x)
+        logvar = self.elu(logvar)
+        logvar = self.linear_logvar_2(logvar)
         return mean, logvar
 
 class Decoder2(nn.Module):
     def __init__(self):
         super(Decoder2, self).__init__()
-        self.linear = nn.Linear(in_features=100, out_features=256, bias=True)
+        self.linear_1 = nn.Linear(in_features=100, out_features=256, bias=True)
+        self.linear_2 = nn.Linear(in_features=256, out_features=256, bias=True)
         self.conv0 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3, 3), padding=2)
         self.conv1 = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=(3, 3), padding=2)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), padding=3)
@@ -190,7 +197,9 @@ class Decoder2(nn.Module):
         #self.sigmoid = nn.Sigmoid()
 
     def forward(self, z):
-        z = self.linear(z)
+        z = self.linear_1(z)
+        z = self.elu(z)
+        z = self.linear_2(z)
         z = z.unsqueeze(-1).unsqueeze(-1)
         z = self.elu(z)
         z = self.conv0(z)
