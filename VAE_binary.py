@@ -260,7 +260,7 @@ def generate_interpolated_samples(model, save_dir, alphas, interpolate_images=Fa
             generated_images_0 = model.decoder(random_z_0)
             generated_images_1 = model.decoder(random_z_1)
             for alpha in alphas:
-                generated_images = alpha*generated_images_0 + (1-alpha) * generated_images_1
+                generated_images = alpha*generated_images_0 + (1.-alpha) * generated_images_1
                 if model_outputs_logits:
                     generated_images = (torch.sigmoid(generated_images)).round().cpu()
                 else:  # assuming input images are in the range of -1 and 1
@@ -270,7 +270,7 @@ def generate_interpolated_samples(model, save_dir, alphas, interpolate_images=Fa
                 save_image(generated_images, image_path)
         else:
             for alpha in alphas:
-                random_z = alpha*random_z_0 + (1-alpha)*random_z_1
+                random_z = alpha*random_z_0 + (1.-alpha)*random_z_1
                 generated_images = model.decoder(random_z)
                 if model_outputs_logits:
                     generated_images = (torch.sigmoid(generated_images)).round().cpu()
