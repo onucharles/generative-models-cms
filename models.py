@@ -143,3 +143,25 @@ class VAE(nn.Module):
         z = self.reparametrize(mean, logvar)
         x_tilde_logits = self.decoder(z)
         return x_tilde_logits, mean, logvar
+
+
+#ELBO using Cross Entropy reconstruction loss
+class Elbo_CE(nn.Module):
+    def __init__(self):
+        super(Elbo_CE, self).__init__()
+
+    def forward(self, x, x_tilde_logits, mean, logvar):
+        #std = torch.exp(logvar/2)
+        #log_encoder = -0.5 * torch.sum(((z - mean)/std)**2,-1) - 0.5 * torch.sum(torch.log(2*np.pi*std**2),-1)
+        #log_prior = -0.5 * torch.sum(z ** 2, -1) - 0.5 * z.shape[-1] * np.log(2 * np.pi)
+
+        x = x.reshape((x.shape[0],-1))
+        x_tilde_logits = x_tilde_logits.reshape((x_tilde_logits.shape[0], -1))
+
+        # Analytical KL divergence for a standard normal distribution prior and a
+        # multivariate normal distribution with diagonal covariance q(z|x)
+        kl = 0.5 * (-logvar - 1 + mean**2 + torch.exp(logvar)).sum(dim=-1)
+        log_decoder = -torch.sum(F.binary_cross_entropy_with_logits(input=x_tilde_logits, target=x, reduction="none"), dim=-1)
+        #log_decoder = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1) #log likelihood (- cross entropy)
+        loss = -(log_decoder - kl).mean()
+        return loss
