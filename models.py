@@ -71,7 +71,7 @@ class MLP2(nn.Module):
         return out
 
 
-# A VAE adjusted adjusted to 1x28x28 images
+# A VAE adjusted to 1x28x28 Binarized MNIST Dataset
 class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
@@ -81,7 +81,7 @@ class Encoder(nn.Module):
         self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(7, 7), padding=0)
         self.linear_mean = nn.Linear(in_features=256, out_features=100, bias=True)
-        self.linear_logvar= nn.Linear(in_features=256, out_features=100, bias=True)
+        self.linear_logvar = nn.Linear(in_features=256, out_features=100, bias=True)
         self.elu = nn.ELU(alpha=1.)
 
     def forward(self, x):
@@ -145,17 +145,19 @@ class VAE(nn.Module):
         return x_tilde_logits, mean, logvar
 
 
-##Another VAE more adjusted to 3x32x32 images
+# Another VAE adjusted to 3x32x32 SVHN Dataset
 class Encoder2(nn.Module):
     def __init__(self):
         super(Encoder2, self).__init__()
-        self.conv0 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0)
+        self.conv0 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=1)
         self.pool0 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-        self.conv1 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0)
+        self.conv1 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1)
         self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(6, 6), padding=0)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(3, 3), padding=1)
+        self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
+        self.conv3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(4, 4), padding=0)
         self.linear_mean = nn.Linear(in_features=256, out_features=100, bias=True)
-        self.linear_logvar= nn.Linear(in_features=256, out_features=100, bias=True)
+        self.linear_logvar = nn.Linear(in_features=256, out_features=100, bias=True)
         self.elu = nn.ELU(alpha=1.)
 
     def forward(self, x):
@@ -167,6 +169,9 @@ class Encoder2(nn.Module):
         x = self.pool1(x)
         x = self.conv2(x)
         x = self.elu(x)
+        x = self.pool2(x)
+        x = self.conv3(x)
+        x = self.elu(x)
         x = x.view(x.size(0), -1)
         mean = self.linear_mean(x)
         logvar = self.linear_logvar(x)
@@ -176,12 +181,11 @@ class Decoder2(nn.Module):
     def __init__(self):
         super(Decoder2, self).__init__()
         self.linear = nn.Linear(in_features=100, out_features=256, bias=True)
-        self.conv0 = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=(5, 5), padding=4)
-        #self.upsample0 = nn.Upsample(scale_factor=2, mode='bilinear')
-        self.conv1 = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), padding=3)
-        #self.upsample1 = nn.Upsample(scale_factor=2, mode='bilinear')
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=16, kernel_size=(3, 3), padding=2)
-        self.conv3 = nn.Conv2d(in_channels=16, out_channels=3, kernel_size=(3, 3), padding=2)
+        self.conv0 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3, 3), padding=2)
+        self.conv1 = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=(3, 3), padding=2)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), padding=3)
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=16, kernel_size=(3, 3), padding=2)
+        self.conv4 = nn.Conv2d(in_channels=16, out_channels=3, kernel_size=(3, 3), padding=2)
         self.elu = nn.ELU(alpha=1.)
         #self.sigmoid = nn.Sigmoid()
 
@@ -191,13 +195,15 @@ class Decoder2(nn.Module):
         z = self.elu(z)
         z = self.conv0(z)
         z = self.elu(z)
-        z = F.interpolate(z, scale_factor=2, mode='bilinear')
         z = self.conv1(z)
         z = self.elu(z)
         z = F.interpolate(z, scale_factor=2, mode='bilinear')
         z = self.conv2(z)
         z = self.elu(z)
-        x_tilde = self.conv3(z)
+        z = F.interpolate(z, scale_factor=2, mode='bilinear')
+        z = self.conv3(z)
+        z = self.elu(z)
+        x_tilde = self.conv4(z)
         return x_tilde
 
 
