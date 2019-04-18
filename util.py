@@ -1,18 +1,7 @@
 import numpy as np
-from models import VAE
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 from torch.utils import data
-from torchvision.utils import save_image
-import time
-import os
-import csv
-import torchsummary
-import io
-from contextlib import redirect_stdout
-from math import ceil
+import torchvision.datasets
 
 #Load Dataset
 def load_data(train_path, test_path, val_path=None, batch_size=32, train_val_ratio=0.8):
@@ -52,3 +41,41 @@ def load_data(train_path, test_path, val_path=None, batch_size=32, train_val_rat
     val_loader = data.DataLoader(validation, batch_size=batch_size, shuffle=False)
     test_loader = data.DataLoader(test, batch_size=batch_size, shuffle=False)
     return (train_loader, val_loader, test_loader)
+
+
+#Load SVHN Dataset
+def load_SVHN(dataset_location, batch_size):
+    trainvalid = torchvision.datasets.SVHN(
+        dataset_location, split='train',
+        download=True,
+        transform=image_transform
+    )
+
+    trainset_size = int(len(trainvalid) * 0.9)
+    trainset, validset = dataset.random_split(
+        trainvalid,
+        [trainset_size, len(trainvalid) - trainset_size]
+    )
+
+    train_loader = torch.utils.data.DataLoader(
+        trainset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=2
+    )
+
+    val_loader = torch.utils.data.DataLoader(
+        validset,
+        batch_size=batch_size,
+    )
+
+    test_loader = torch.utils.data.DataLoader(
+        torchvision.datasets.SVHN(
+            dataset_location, split='test',
+            download=True,
+            transform=image_transform
+        ),
+        batch_size=batch_size,
+    )
+
+    return train_loader, val_loader, test_loader
