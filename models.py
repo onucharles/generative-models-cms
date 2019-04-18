@@ -147,7 +147,7 @@ class VAE(nn.Module):
 ##Another VAE more adjusted to 3x32x32 images
 class Encoder2(nn.Module):
     def __init__(self):
-        super(Encoder, self).__init__()
+        super(Encoder2, self).__init__()
         self.conv0 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0)
         self.pool0 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         self.conv1 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0)
@@ -173,7 +173,7 @@ class Encoder2(nn.Module):
 
 class Decoder2(nn.Module):
     def __init__(self):
-        super(Decoder, self).__init__()
+        super(Decoder2, self).__init__()
         self.linear = nn.Linear(in_features=100, out_features=256, bias=True)
         self.conv0 = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=(5, 5), padding=4)
         #self.upsample0 = nn.Upsample(scale_factor=2, mode='bilinear')
@@ -200,9 +200,9 @@ class Decoder2(nn.Module):
         return x_tilde
 
 
-class VAE(nn.Module):
+class VAE2(nn.Module):
     def __init__(self):
-        super(VAE, self).__init__()
+        super(VAE2, self).__init__()
         self.encoder = Encoder2()
         self.decoder = Decoder2()
 
