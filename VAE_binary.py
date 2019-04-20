@@ -1,5 +1,4 @@
 import numpy as np
-from models import VAE, Elbo_BCE
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,10 +8,11 @@ from torchvision.utils import save_image
 import time
 import os
 import csv
-import torchsummary
+#import torchsummary
 import io
 from contextlib import redirect_stdout
 from math import ceil
+from models import VAE, Elbo_BCE
 
 
 #K is the number of importance samples
@@ -98,13 +98,14 @@ def epoch_eval(model, loader, loss_fn):
 
 
 #Train the model for a number of epochs
-def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.curdir, save_interval=None, log_interval=None,
+def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.getcwd(), save_interval=None, log_interval=None,
           model_outputs_logits=True, train_samples=None, val_samples=None, random_z=None):
     train_elbos = []
     val_elbos = []
     epoch_time = []
     max_val_elbo = -1000000
     for epoch in range(epochs):
+        print("Starting epoch %d." % (epoch))
         stime = time.time()
         train_elbo = epoch_train(model, optimizer, train_loader, loss_fn, epoch, log_interval)
         val_elbo = epoch_eval(model, val_loader, loss_fn)
@@ -138,20 +139,20 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir 
 #Save the model and the training statistics
 def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, best_model=False):
     if best_model:
-        path = os.path.join(save_dir, f'model_best.pt')
+        path = f'model_best.pt'
     else:
-        path = os.path.join(save_dir, f'model_epoch_{epoch}.pt')
+        path = os.path.join(os.getcwd(), f'model_epoch_{epoch}.pt')
     torch.save({
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'train_elbos': train_elbos,
-        'val_elbos': val_elbos,
+        'val_elbos': val_elbos
     }, path)
 
     epochs = [j for j in range(epoch+1)]
     stats = {'Epoch': epochs, 'Train Elbo': train_elbos, "Validation Elbo": val_elbos, "Epoch Time": epoch_time}
-    stats_path = os.path.join(save_dir, 'stats.csv')
+    stats_path = 'stats.csv'
     with open(stats_path, 'w') as csvfile:
         fieldnames = stats.keys()
         writer = csv.writer(csvfile)
@@ -196,20 +197,20 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
 
     if epoch == 0:
         if model_outputs_logits:
-            save_image(train_samples, os.path.join(save_dir, "original_train_samples.png"))
-            save_image(val_samples, os.path.join(save_dir, "original_val_samples.png"))
+            save_image(train_samples,"original_train_samples.png")
+            save_image(val_samples,"original_val_samples.png")
         else:  # assuming input images are in the range of -1 and 1
-            save_image((train_samples + 1) / 2, os.path.join(save_dir, "original_train_samples.png"))
-            save_image((val_samples + 1) / 2, os.path.join(save_dir, "original_val_samples.png"))
+            save_image((train_samples + 1) / 2, "original_train_samples.png")
+            save_image((val_samples + 1) / 2, "original_val_samples.png")
 
     if best:
-        generated_train_path = os.path.join(save_dir, f"generated_train_samples_best.png")
-        generated_val_path = os.path.join(save_dir, f"generated_val_samples_best.png")
-        generated_random_path = os.path.join(save_dir, f"generated_random_samples_best.png")
+        generated_train_path = f"generated_train_samples_best.png"
+        generated_val_path = f"generated_val_samples_best.png"
+        generated_random_path = f"generated_random_samples_best.png"
     else:
-        generated_train_path = os.path.join(save_dir, f"generated_train_samples_{epoch}.png")
-        generated_val_path = os.path.join(save_dir, f"generated_val_samples_{epoch}.png")
-        generated_random_path = os.path.join(save_dir, f"generated_random_samples_{epoch}.png")
+        generated_train_path = f"generated_train_samples_{epoch}.png"
+        generated_val_path = f"generated_val_samples_{epoch}.png"
+        generated_random_path = f"generated_random_samples_{epoch}.png"
 
     save_image(generated_train_samples, generated_train_path)
     save_image(generated_val_samples, generated_val_path)
