@@ -50,7 +50,7 @@ if __name__ == "__main__":
         epochs = 21
         save_interval = 3 #save model every save_interval epochs (None for not saving)
         log_interval = 100 #print results every log_interval batches (in addition to every epoch (None for not printing)
-        model_folder = os.path.join(os.getcwd(), "\\VAE_SVHN_model")#"C:\\Users\\Saber\\Desktop\\School\\IFT6135\\Assig3\\generative-models-cms\\VAE_SVHN_model"
+        model_folder = os.path.join(os.getcwd(), "/VAE_SVHN_model")
         print(model_folder)
 
     else:
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         epochs = 0
         save_interval = 0 #save model every save_interval epochs (None for not saving)
         log_interval = 0 #print results every log_interval batches (in addition to every epoch (None for not printing)
-        model_folder = os.path.join(os.getcwd(), "\\VAE_SVHN_model")#"C:\\Users\\Saber\\Desktop\\School\\IFT6135\\Assig3\\generative-models-cms\\VAE_SVHN_model"
-        
+        model_folder = os.path.join(os.getcwd(), "/GAN_SVHN_model")    
+    
     hyperparams = Hyperparameters(batch_size, lr, epochs, save_interval, log_interval)
 
     train, valid, test = get_data_loader("svhn", hyperparams.batch_size)

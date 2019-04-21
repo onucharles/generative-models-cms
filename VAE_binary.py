@@ -139,9 +139,9 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir,
 #Save the model and the training statistics
 def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, best_model=False):
     if best_model:
-        path = os.path.join(os.getcwd(), f'model_best.pt')
+        path = os.path.join(save_dir, f'model_best.pt')
     else:
-        path = os.path.join(os.getcwd(), f'model_epoch_{epoch}.pt')
+        path = os.path.join(save_dir, f'model_epoch_{epoch}.pt')
     torch.save({
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
@@ -152,7 +152,7 @@ def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save
 
     epochs = [j for j in range(epoch+1)]
     stats = {'Epoch': epochs, 'Train Elbo': train_elbos, "Validation Elbo": val_elbos, "Epoch Time": epoch_time}
-    stats_path = 'stats.csv'
+    stats_path = os.path.join(save_dir, 'stats.csv')
     with open(stats_path, 'w') as csvfile:
         fieldnames = stats.keys()
         writer = csv.writer(csvfile)
