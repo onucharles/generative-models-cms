@@ -139,7 +139,7 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir,
 #Save the model and the training statistics
 def save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, best_model=False):
     if best_model:
-        path = f'model_best.pt'
+        path = os.path.join(os.getcwd(), f'model_best.pt')
     else:
         path = os.path.join(os.getcwd(), f'model_epoch_{epoch}.pt')
     torch.save({
@@ -197,20 +197,20 @@ def generate_samples(model, save_dir, epoch, train_samples, val_samples, random_
 
     if epoch == 0:
         if model_outputs_logits:
-            save_image(train_samples,"original_train_samples.png")
-            save_image(val_samples,"original_val_samples.png")
+            save_image(train_samples, os.path.join(save_dir, "original_train_samples.png"))
+            save_image(val_samples, os.path.join(save_dir, "original_val_samples.png"))
         else:  # assuming input images are in the range of -1 and 1
-            save_image((train_samples + 1) / 2, "original_train_samples.png")
-            save_image((val_samples + 1) / 2, "original_val_samples.png")
+            save_image((train_samples + 1) / 2, os.path.join(save_dir, "original_train_samples.png"))
+            save_image((val_samples + 1) / 2, os.path.join(save_dir, "original_val_samples.png"))
 
     if best:
-        generated_train_path = f"generated_train_samples_best.png"
-        generated_val_path = f"generated_val_samples_best.png"
-        generated_random_path = f"generated_random_samples_best.png"
+        generated_train_path = os.path.join(save_dir, f"generated_train_samples_best.png")
+        generated_val_path = os.path.join(save_dir, f"generated_val_samples_best.png")
+        generated_random_path = os.path.join(save_dir, f"generated_random_samples_best.png")
     else:
-        generated_train_path = f"generated_train_samples_{epoch}.png"
-        generated_val_path = f"generated_val_samples_{epoch}.png"
-        generated_random_path = f"generated_random_samples_{epoch}.png"
+        generated_train_path = os.path.join(save_dir, f"generated_train_samples_{epoch}.png")
+        generated_val_path = os.path.join(save_dir, f"generated_val_samples_{epoch}.png")
+        generated_random_path = os.path.join(save_dir, f"generated_random_samples_{epoch}.png")
 
     save_image(generated_train_samples, generated_train_path)
     save_image(generated_val_samples, generated_val_path)
