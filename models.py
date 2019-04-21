@@ -214,6 +214,33 @@ class Decoder2(nn.Module):
         x_tilde = self.conv3(z)
         return x_tilde
 
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        self.conv_dimensions = 64
+
+        #We make the discriminator with 3 conv layers, batch norm, leaky relu and a fully connected layer
+        convolutions = nn.Sequential(
+            nn.Conv2d(3, self.conv_dimensions, kernel_size=3, stride=2, padding=1),
+            nn.LeakyReLU(),
+            nn.Conv2d(self.conv_dimensions, 2*self.conv_dimensions, kernel_size=3, stride=2, padding=1),
+            #nn.BatchNorm2d(2*self.conv_dimensions),
+            nn.LeakyReLU(),
+            nn.Conv2d(2*self.conv_dimensions, 4*self.conv_dimensions, kernel_size=3, stride=2, padding=1),
+            #nn.BatchNorm2d(4*self.conv_dimensions),
+            nn.LeakyReLU(),
+        )
+
+        self.convolutions = convolutions
+        self.fully_con = nn.Linear(4*4*4*self.conv_dimensions, 1)
+        
+
+    def forward(self, x):
+        out = self.convolutions(x)
+        out = out.view(-1, 4*4*4*self.conv_dimensions)
+        out = self.fully_con(out)
+        return out
+
 
 class VAE2(nn.Module):
     def __init__(self):
@@ -231,6 +258,7 @@ class VAE2(nn.Module):
         z = self.reparametrize(mean, logvar)
         x_tilde_logits = self.decoder(z)
         return x_tilde_logits, mean, logvar
+
 
 
 #ELBO using Binary Cross Entropy reconstruction loss (decoder p(x|z) as Bernoulli distribution)
