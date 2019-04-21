@@ -98,7 +98,7 @@ def epoch_eval(model, loader, loss_fn):
 
 
 #Train the model for a number of epochs
-def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir = os.getcwd(), save_interval=None, log_interval=None,
+def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir, save_interval=None, log_interval=None,
           model_outputs_logits=True, train_samples=None, val_samples=None, random_z=None):
     train_elbos = []
     val_elbos = []
@@ -249,8 +249,8 @@ def generate_random_samples(model, save_dir, random_z_samples=None, epoch=-1, nu
 def generate_interpolated_samples(model, save_dir, alphas, interpolate_images=False, random_z_0=None, random_z_1=None, epoch=-1, num_samples=64, latent_size=100,
                             model_outputs_logits=False, generated_random_file="generated_random_samples_interpolated"):
     save_dir = os.path.join(save_dir, "interpolation_samples")
-    if not os.path.isdir(save_dir):
-        os.mkdir(save_dir)
+    #if not os.path.isdir(save_dir):
+        #os.mkdir(save_dir)
     with torch.no_grad():
         if (random_z_0 is None) or (random_z_1 is None):
             random_z_0 = torch.randn((num_samples, latent_size))

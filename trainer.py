@@ -30,16 +30,6 @@ class Hyperparameters():
         self.save_interval = save_interval
         self.log_interval = log_interval
 
-def build_VAE(device):
-    batch_size = 64
-    lr = 3e-4
-    epochs = 21
-    save_interval = 3 #save model every save_interval epochs (None for not saving)
-    log_interval = 100 #print results every log_interval batches (in addition to every epoch (None for not printing)
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generative Models Training')
     parser.add_argument('-m', '--model', default="VAE", type=str,
@@ -56,11 +46,12 @@ if __name__ == "__main__":
     if args.model == "VAE":
         # Hyperparameters for VAE
         batch_size = 64
-        lr = 3e-4
+        lr = 5e-4
         epochs = 21
         save_interval = 3 #save model every save_interval epochs (None for not saving)
         log_interval = 100 #print results every log_interval batches (in addition to every epoch (None for not printing)
-        model_folder = "VAE_SVHN_model"
+        model_folder = os.path.join(os.getcwd(), "\\VAE_SVHN_model")#"C:\\Users\\Saber\\Desktop\\School\\IFT6135\\Assig3\\generative-models-cms\\VAE_SVHN_model"
+        print(model_folder)
 
     else:
         # Hyperparameters for GAN
@@ -69,7 +60,7 @@ if __name__ == "__main__":
         epochs = 0
         save_interval = 0 #save model every save_interval epochs (None for not saving)
         log_interval = 0 #print results every log_interval batches (in addition to every epoch (None for not printing)
-        model_folder = "GAN_SVHN_model"
+        model_folder = "C:\\Users\\Saber\\Desktop\\School\\IFT6135\\Assig3\\generative-models-cms\\GAN_SVHN_model"
         
     hyperparams = Hyperparameters(batch_size, lr, epochs, save_interval, log_interval)
 
@@ -93,6 +84,6 @@ if __name__ == "__main__":
                                            model_outputs_logits=False, train_samples=train_samples, val_samples=val_samples, random_z=random_z)
 
         VAE_binary.generate_interpolated_samples(model, model_folder, alphas, interpolate_images=False, random_z_0=random_z_0, random_z_1=random_z_1, 
-                                          epoch=20, num_samples=64, latent_size=100, model_outputs_logits=False)
+                                          epoch=hyperparams.epochs, num_samples=64, latent_size=100, model_outputs_logits=False)
         VAE_binary.generate_interpolated_samples(model, model_folder, alphas, interpolate_images=True, random_z_0=random_z_0, random_z_1=random_z_1, 
-                                          epoch=20, num_samples=64, latent_size=100, model_outputs_logits=False)
+                                          epoch=hyperparams.epochs, num_samples=64, latent_size=100, model_outputs_logits=False)
