@@ -3,8 +3,7 @@ import os
 import torchvision
 import torchvision.transforms as transforms
 import torch
-import classify_svhn
-from classify_svhn import Classifier
+from problem3 import classify_svhn
 
 SVHN_PATH = "svhn"
 PROCESS_BATCH_SIZE = 32

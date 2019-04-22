@@ -82,23 +82,8 @@ def train(model, p_dist, q_dist, optimizer, criterion, device, n_epochs, is_wass
         # record the loss for plotting.
         print(loss.item())
         losses.append(loss.item())
-    # test(model, p_dist, q_dist, device)
 
     return losses
-
-# def test(model, p_dist, q_dist, device):
-#     model.eval()
-#     with torch.no_grad():
-#         # generate a batch of data
-#         x, y = next(p_dist), next(q_dist)
-#         x, y = torch.from_numpy(x).to(device), torch.from_numpy(y).to(device)
-#
-#         # run forward pass
-#         d_x = model(x)
-#         d_y = model(y)
-#
-#         loss = criterion(d_x, d_y)
-#         print('test loss: ', loss.item())
 
 def estimate_divergences(model_hyperparams, lr, criterion, device, batch_size, n_epochs, is_wasserstein):
     input_size, h1_size, h2_size, out_size, out_sigmoid = model_hyperparams
