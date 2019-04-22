@@ -23,6 +23,7 @@ class Trainer():
         self.samples_dir = f"samples/{current_datetime()}/"
         create_folder(self.samples_dir)
         save_json(vars(args), f"{self.samples_dir}/config.json")
+        self.args = args
 
         if self.use_cuda:
             self.G.cuda()
@@ -122,13 +123,13 @@ class Trainer():
                 if self.num_steps > self.critic_iterations:
                     print("G: {}".format(self.losses['G'][-1]))
 
-    def train(self, data_loader, epochs, save_training_gif=True):
+    def train(self, data_loader, epochs, save_training_gif=True, save_model=True):
         if save_training_gif:
             # Fix latents to see how image generation improves during training
             fixed_latents = Variable(self.G.sample_latent(64))
             if self.use_cuda:
                 fixed_latents = fixed_latents.cuda()
-            training_progress_images = []
+            # training_progress_images = []
 
         # save 1 batch of original images.
         for i, (x, _) in enumerate(data_loader):
@@ -140,6 +141,9 @@ class Trainer():
             print("\nEpoch {}".format(epoch + 1))
             self._train_epoch(data_loader)
 
+            if save_model:
+                torch.save(self.G.state_dict(), f"{self.samples_dir}/generator/epoch_{epoch}.pt")
+                torch.save(self.D.state_dict(), f"{self.samples_dir}/critic/epoch_{epoch}.pt")
             if save_training_gif:
                 # # Generate batch of images and convert to grid
                 # img_grid = make_grid(self.G(fixed_latents).cpu().data)

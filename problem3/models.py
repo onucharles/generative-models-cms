@@ -40,45 +40,6 @@ class Critic(nn.Module):
         x = x.view(batch_size, -1)
         return self.features_to_prob(x)
 
-# class Critic(nn.Module):
-#     def __init__(self):
-#         super(Critic, self).__init__()
-#         self.conv0 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0)
-#         self.batchnorm0 = nn.BatchNorm2d(32)
-#         self.conv1 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0)
-#         self.batchnorm1 = nn.BatchNorm2d(64)
-#         self.pool1 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-#         self.conv2 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(3, 3), padding=0)
-#         self.batchnorm2 = nn.BatchNorm2d(256)
-#         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-#         self.conv3 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(6, 6), padding=0)
-#         self.batchnorm3 = nn.BatchNorm2d(256)
-#         # self.linear_mean = nn.Linear(in_features=256, out_features=100, bias=True)
-#         # self.linear_logvar = nn.Linear(in_features=256, out_features=100, bias=True)
-#         self.elu = nn.ELU(alpha=1.)
-#         self.linear = nn.Linear(in_features=256, out_features=1, bias=True)
-#
-#     def forward(self, x):
-#         # print('input to critic: ', x.size())
-#         x = self.conv0(x)
-#         x = self.elu(x)
-#         x = self.batchnorm0(x)
-#         x = self.conv1(x)
-#         x = self.elu(x)
-#         x = self.batchnorm1(x)
-#         x = self.pool1(x)
-#         x = self.conv2(x)
-#         x = self.elu(x)
-#         x = self.batchnorm2(x)
-#         x = self.pool2(x)
-#         x = self.conv3(x)
-#         x = self.elu(x)
-#         x = self.batchnorm3(x)
-#         x = x.view(x.size(0), -1)
-#         x = self.linear(x)
-#         # print('output from critic: ', x.size())
-#         return x
-
 class Decoder2(nn.Module):
     def __init__(self):
         super(Decoder2, self).__init__()
