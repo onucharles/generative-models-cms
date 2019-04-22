@@ -218,6 +218,7 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.conv_dimensions = 64
+        self.sig = nn.Sigmoid()
 
         #We make the discriminator with 3 conv layers, batch norm, leaky relu and a fully connected layer
         convolutions = nn.Sequential(
@@ -239,6 +240,8 @@ class Discriminator(nn.Module):
         out = self.convolutions(x)
         out = out.view(-1, 4*4*4*self.conv_dimensions)
         out = self.fully_con(out)
+        out = self.sig(out)
+
         return out
 
 

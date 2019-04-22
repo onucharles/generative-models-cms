@@ -24,7 +24,6 @@ seed = 1111
 np.random.seed(seed)
 torch.random.manual_seed(seed)
 directory = os.getcwd()
-print('1 ' + directory)
 
 class Hyperparameters():
     def __init__(self, batch_size=64, lr=1e-4, epochs=21, save_interval=3, log_interval=100, lmbda=-1, discrim_iters=-1):
@@ -38,7 +37,7 @@ class Hyperparameters():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generative Models Training')
-    parser.add_argument('-m', '--model', default="VAE", type=str,
+    parser.add_argument('-m', '--model', default="VAEE", type=str,
                         help='Which model to train (VAE or GAN) (default: VAE)')
 
     
@@ -102,4 +101,4 @@ if __name__ == "__main__":
         optimizerGen = optim.Adam(generator.parameters(), lr=hyperparams.lr)
         optimizerDis = optim.Adam(discriminator.parameters(), lr = hyperparams.lr)
 
-        GAN_svhn.GAN_train(generator, discriminator, optimizerGen, optimizerDis, train, hyperparams)
+        GAN_svhn.GAN_train(generator, discriminator, optimizerGen, optimizerDis, train, valid, hyperparams, model_folder)
