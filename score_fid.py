@@ -4,11 +4,14 @@ import torchvision
 import torchvision.transforms as transforms
 import torch
 import classify_svhn
+import numpy as np
+import time
+import scipy as sp
 from classify_svhn import Classifier
 
 SVHN_PATH = "svhn"
 PROCESS_BATCH_SIZE = 32
-
+directory = os.getcwd()
 
 def get_sample_loader(path, batch_size):
     """
@@ -72,39 +75,68 @@ def extract_features(classifier, data_loader):
 
 def calculate_fid_score(sample_feature_iterator,
                         testset_feature_iterator):
-    """
-    To be implemented by you!
-    """
-    raise NotImplementedError(
-        "TO BE IMPLEMENTED."
-        "Part of Assignment 3 Quantitative Evaluations"
-    )
+
+    targets = [next(iter(testset_feature_iterator))] # For Testtest
+    samples = [next(iter(sample_feature_iterator))] # For Samples
+    
+
+    for _ in range(999):
+        target = next(iter(testset_feature_iterator))
+        sample = next(iter(sample_feature_iterator))
+        targets = np.vstack([targets, target])
+        samples = np.vstack([samples, sample])
+
+    mu_p = np.mean(targets, axis=0)
+    mu_q = np.mean(samples, axis=0)
+
+    sigma_p = np.cov(np.transpose(targets))
+    sigma_q = np.cov(np.transpose(samples))
+   
+    # L2 norm squared
+    diff = mu_p - mu_q
+    l2_norm_squared = np.linalg.norm(diff)**2
+
+    # Trace of the Cov part
+    epsilon = 1e-4
+    I = np.identity(mu_p.size)
+    sqrt_cov = sp.linalg.sqrtm(np.matmul(sigma_p, sigma_q)+epsilon*I)
+    trace = np.trace(sigma_p + sigma_p - 2*sqrt_cov)
+
+    return l2_norm_squared + trace
+
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Score a directory of images with the FID score.')
-    parser.add_argument('--model', type=str, default="svhn_classifier.pt",
-                        help='Path to feature extraction model.')
-    parser.add_argument('directory', type=str,
-                        help='Path to image directory')
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(
+    #     description='Score a directory of images with the FID score.')
+    # parser.add_argument('--model', type=str, default="svhn_classifier.pt",
+    #                     help='Path to feature extraction model.')
+    # parser.add_argument('directory', type=str,
+    #                     help='Path to image directory')
+    # args = parser.parse_args()
 
-    quit = False
-    if not os.path.isfile(args.model):
-        print("Model file " + args.model + " does not exist.")
-        quit = True
-    if not os.path.isdir(args.directory):
-        print("Directory " + args.directory + " does not exist.")
-        quit = True
-    if quit:
-        exit()
+    model_folder = (directory + "\\svhn_classifier.pt")
+    sample_folder = (directory + "\\VAE_SVHN_model\\samples\\")
+
+    # quit = False
+    # if not os.path.isfile(args.model):
+    #     print("Model file " + args.model + " does not exist.")
+    #     quit = True
+    # if not os.path.isdir(args.directory):
+    #     print("Directory " + args.directory + " does not exist.")
+    #     quit = True
+    # if quit:
+    #     exit()
     print("Test")
-    classifier = torch.load(args.model, map_location='cpu')
+    #classifier = torch.load(args.model, map_location='cpu')
+    classifier = torch.load(model_folder, map_location='cpu')
+    
     classifier.eval()
 
-    sample_loader = get_sample_loader(args.directory,
-                                      PROCESS_BATCH_SIZE)
+    #sample_loader = get_sample_loader(args.directory,
+    #                                  PROCESS_BATCH_SIZE)
+    sample_loader = get_sample_loader(sample_folder, PROCESS_BATCH_SIZE)
+    
     sample_f = extract_features(classifier, sample_loader)
 
     test_loader = get_test_loader(PROCESS_BATCH_SIZE)
