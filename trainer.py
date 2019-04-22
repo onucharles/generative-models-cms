@@ -63,20 +63,20 @@ if __name__ == "__main__":
         hyperparams = Hyperparameters(
             batch_size = 64, 
             lr = 1e-4, 
-            epochs = 21,
-            save_interval = 3, 
+            epochs = 150,
+            save_interval = 10, 
             log_interval = 100,
             lmbda = 10,
             discrim_iters = 5)
-        model_folder = (directory + "\\GAN_SVHN_model")    
+        model_folder = (directory + "\\GAN_SVHN_model_tanh")    
 
     train, valid, test = get_data_loader("svhn", hyperparams.batch_size)
     train_samples, _ = next(iter(train))
     val_samples, _ = next(iter(valid))
     
     random_z = torch.randn((hyperparams.batch_size, 100))
-    random_z_0 = torch.randn((64, 100))
-    random_z_1 = torch.randn((64, 100))
+    random_z_0 = torch.randn((hyperparams.batch_size, 100))
+    random_z_1 = torch.randn((hyperparams.batch_size, 100))
     alphas = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
     
     if args.model == "VAE":
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         generator = Decoder2().to(device)
         discriminator = Discriminator().to(device)
 
-        optimizerGen = optim.Adam(generator.parameters(), lr=hyperparams.lr)
-        optimizerDis = optim.Adam(discriminator.parameters(), lr = hyperparams.lr)
+        optimizerGen = optim.Adam(generator.parameters(), lr=hyperparams.lr, betas=(0, 0.9), eps=1e-4)
+        optimizerDis = optim.Adam(discriminator.parameters(), lr = hyperparams.lr, betas=(0, 0.9), eps=1e-4)
 
-        GAN_svhn.GAN_train(generator, discriminator, optimizerGen, optimizerDis, train, valid, hyperparams, model_folder)
+        GAN_svhn.GAN_train(generator, discriminator, optimizerGen, optimizerDis, train, valid, hyperparams, model_folder, random_z)

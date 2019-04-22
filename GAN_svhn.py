@@ -38,6 +38,7 @@ def gradient_penalty(discriminator, x, x_tilde, lmbda):
 
 def GAN_train_epoch(generator, discriminator, optimizerGen, optimizerDis, loader, hyperparameters, epoch):
     iteration = 0
+    tanh = nn.Tanh()
     for batch_id, (x, _) in enumerate(loader):
         iteration += 1
         current_batch_size = x.size(0) #To deal with the last batch size being smaller
@@ -61,6 +62,7 @@ def GAN_train_epoch(generator, discriminator, optimizerGen, optimizerDis, loader
         noise_var = autograd.Variable(noise)
 
         x_tilde = autograd.Variable(generator(noise_var).data)
+        x_tilde = tanh(x_tilde)
 
         disc_x_tilde = discriminator(x_tilde)
         disc_x_tilde = disc_x_tilde.mean()
@@ -90,7 +92,8 @@ def GAN_train_epoch(generator, discriminator, optimizerGen, optimizerDis, loader
             noise_var = autograd.Variable(noise)
 
             x_tilde = generator(noise_var)
-
+            x_tilde = tanh(x_tilde)
+            
             gen_cost = discriminator(x_tilde)
             gen_cost = gen_cost.mean()
             gen_cost.backward((torch.FloatTensor([1]) * -1).to(device))
@@ -114,7 +117,7 @@ def GAN_train_epoch(generator, discriminator, optimizerGen, optimizerDis, loader
 def GAN_valid_BCE(generator, discriminator, loader):
     generator.eval()
     discriminator.eval()
-
+    tanh = nn.Tanh()
     BCE = 0
 
     for _, (x, _) in enumerate(loader):
@@ -125,6 +128,7 @@ def GAN_valid_BCE(generator, discriminator, loader):
         noise = torch.randn(current_batch_size, 100)
         noise = noise.to(device)
         x_tilde = generator(noise)
+        x_tilde = tanh(x_tilde)
         x_fake = discriminator(x_tilde)
 
         for i in range(current_batch_size):
@@ -134,7 +138,7 @@ def GAN_valid_BCE(generator, discriminator, loader):
                 BCE -= math.log(1-x_fake.data[i].item())
     return BCE
 
-def GAN_train(generator, discriminator, optimizerGen, optimizerDis, train_loader, valid_loader, hyperparameters, save_dir):
+def GAN_train(generator, discriminator, optimizerGen, optimizerDis, train_loader, valid_loader, hyperparameters, save_dir, random_z):
     disc_train_losses = []
     disc_valid_losses = []
     gen_train_losses = []
@@ -157,19 +161,23 @@ def GAN_train(generator, discriminator, optimizerGen, optimizerDis, train_loader
             min_disc_valid_loss = disc_valid_loss
             if hyperparameters.save_interval is not None:
                 save_GAN(generator, discriminator, optimizerGen, optimizerDis, disc_train_losses, 
-                disc_valid_losses, gen_train_losses, epoch_times, epoch, save_dir, True)
+                    disc_valid_losses, gen_train_losses, epoch_times, epoch, save_dir, True)
+                generate_GAN_samples(generator, save_dir, epoch, random_z, True)
+
 
         if hyperparameters.save_interval is not None:
             if epoch % hyperparameters.save_interval == 0:
                 save_GAN(generator, discriminator, optimizerGen, optimizerDis, disc_train_losses, 
-                disc_valid_losses, gen_train_losses, epoch_times, epoch, save_dir, False)
+                    disc_valid_losses, gen_train_losses, epoch_times, epoch, save_dir, False)
+                generate_GAN_samples(generator, save_dir, epoch, random_z)
         
         print(f"-> Epoch {epoch},\t WGAN-GP Train Loss: {disc_train_loss:.2f},\t BCE Validation Loss: {disc_valid_loss:.2f},\t "
               f"Min Validation Loss: {min_disc_valid_loss:.2f},\t Epoch Time: {epoch_time:.2f} seconds")
     
     if hyperparameters.save_interval is not None:
         save_GAN(generator, discriminator, optimizerGen, optimizerDis, disc_train_losses, 
-        disc_valid_losses, gen_train_losses, epoch_times, epoch, save_dir, False)
+            disc_valid_losses, gen_train_losses, epoch_times, epoch, save_dir, False)
+        generate_GAN_samples(generator, save_dir, epoch, random_z)
 
 #Save the model and the training statistics
 def save_GAN(generator, discriminator, optimizerGen, optimizerDis, disc_train_losses, 
@@ -202,3 +210,22 @@ def save_GAN(generator, discriminator, optimizerGen, optimizerDis, disc_train_lo
         writer = csv.writer(csvfile)
         writer.writerow(fieldnames)
         writer.writerows([[stats[key][j] for key in fieldnames] for j in epochs])
+
+#Generate original samples vs reconstructed samples for the training and validation sets, plus some random samples
+def generate_GAN_samples(generator, save_dir, epoch, random_z, best=False):
+    tanh = nn.Tanh()
+    with torch.no_grad():
+        random_z = random_z.to(device)
+        generated_random_samples = generator(random_z)
+        generated_random_samples = tanh(generated_random_samples)
+
+        #generated_random_samples = (torch.sigmoid(generated_random_samples)).round().cpu()
+        #generated_random_samples = ((generated_random_samples + 1) / 2).cpu()
+        generated_random_samples = generated_random_samples.round().cpu()
+
+    if best:
+        generated_random_path = os.path.join(save_dir, f"generated_random_samples_best.png")
+    else:
+        generated_random_path = os.path.join(save_dir, f"generated_random_samples_{epoch}.png")
+
+    save_image(generated_random_samples, generated_random_path)
