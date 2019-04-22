@@ -14,7 +14,7 @@ class Trainer():
         self.G_opt = gen_optimizer
         self.D = discriminator
         self.D_opt = dis_optimizer
-        self.losses = {'G': [], 'D': [], 'GP': [], 'gradient_norm': []}
+        self.losses = {'G': [], 'D': [], 'GP': [], 'gradient_norm': [], 'crossent': []}
         self.num_steps = 0
         self.use_cuda = use_cuda
         self.gp_weight = gp_weight
@@ -64,6 +64,16 @@ class Trainer():
 
         # Record loss
         self.losses['D'].append(d_loss.item())
+
+        # check cross entropy loss
+        # generate 1s and 0s and stack (target). apply sigmoid to d_real and d_gen and stack. call loss
+        # ones = torch.ones(d_real.size(), dtype=torch.long).cuda() \
+        #     if self.use_cuda else torch.ones(d_real.size(), dtype=torch.long)
+        # targets = torch.cat((ones, 1 - ones))
+        # outputs = torch.cat((nn.Sigmoid()(d_real), nn.Sigmoid()(d_generated)))
+        # print('outputs are:', outputs)
+        # ce_loss = nn.CrossEntropyLoss()(outputs, targets)
+        # self.losses['crossent'].append(ce_loss)
 
     def _generator_train_iteration(self, data):
         """ """
@@ -131,6 +141,7 @@ class Trainer():
                 print("Gradient norm: {}".format(self.losses['gradient_norm'][-1]))
                 if self.num_steps > self.critic_iterations:
                     print("G: {}".format(self.losses['G'][-1]))
+                print("Cross entropy loss: {}".format(self.losses['crossent'][-1]))
 
     def train(self, data_loader, epochs, save_training_gif=True, save_model=True):
         if save_training_gif:
