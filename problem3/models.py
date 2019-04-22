@@ -91,6 +91,7 @@ class Decoder2(nn.Module):
         self.batchnorm2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=3, kernel_size=(3, 3), padding=2)
         self.elu = nn.ELU(alpha=1.)
+        self.tanh = nn.Tanh()
 
     def forward(self, z):
         # print('input to generator: ', z.size())
@@ -110,7 +111,7 @@ class Decoder2(nn.Module):
         z = self.batchnorm2(z)
         x_tilde = self.conv3(z)
         # print('output from generator: ', x_tilde.size())
-        return nn.Tanh()(x_tilde)
+        return self.tanh(x_tilde)
 
     def sample_latent(self, num_samples):
         return torch.randn((num_samples, 100))
