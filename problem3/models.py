@@ -110,7 +110,7 @@ class Decoder2(nn.Module):
         z = self.batchnorm2(z)
         x_tilde = self.conv3(z)
         # print('output from generator: ', x_tilde.size())
-        return x_tilde
+        return nn.Tanh()(x_tilde)
 
     def sample_latent(self, num_samples):
         return torch.randn((num_samples, 100))

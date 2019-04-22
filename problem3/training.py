@@ -127,6 +127,11 @@ class Trainer():
                 fixed_latents = fixed_latents.cuda()
             training_progress_images = []
 
+        # save 1 batch of original images.
+        for i, (x, _) in enumerate(data_loader):
+            if i == 0:
+                save_image((x.cpu() + 1) / 2, f"samples/original_sample_{i}.png")
+
         for epoch in range(epochs):
             print("\nEpoch {}".format(epoch + 1))
             self._train_epoch(data_loader)
@@ -139,7 +144,7 @@ class Trainer():
                 # img_grid = np.transpose(img_grid.numpy(), (1, 2, 0))
                 # # Add image grid to training progress
                 # training_progress_images.append(img_grid)
-                save_image(self.G(fixed_latents).cpu(), f"samples/generated_train_{epoch}.png")
+                save_image((self.G(fixed_latents).cpu() + 1) / 2, f"samples/generated_train_{epoch}.png")
 
         # if save_training_gif:
         #     imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
