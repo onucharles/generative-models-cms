@@ -112,6 +112,9 @@ class Decoder2(nn.Module):
         # print('output from generator: ', x_tilde.size())
         return x_tilde
 
+    def sample_latent(self, num_samples):
+        return torch.randn((num_samples, 100))
+
 # # Model from https://github.com/kuc2477/pytorch-wgan-gp/blob/master/model.py
 # class Critic(nn.Module):
 #     def __init__(self, image_size, image_channel_size, channel_size):

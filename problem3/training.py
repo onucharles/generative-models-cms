@@ -1,4 +1,4 @@
-# import imageio
+import imageio
 import numpy as np
 import torch
 import torch.nn as nn
@@ -140,13 +140,13 @@ class Trainer():
                 # Add image grid to training progress
                 training_progress_images.append(img_grid)
 
-        # if save_training_gif:
-        #     imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
-        #                     training_progress_images)
+        if save_training_gif:
+            imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
+                            training_progress_images)
 
     def sample_generator(self, num_samples):
         # latent_samples = Variable(self.G.sample_latent(num_samples))
-        latent_samples = Variable(torch.randn((num_samples, 100)))
+        latent_samples = Variable(self.G.sample_latent(num_samples))
         if self.use_cuda:
             latent_samples = latent_samples.cuda()
         generated_data = self.G(latent_samples)

@@ -72,7 +72,7 @@ def main():
 
     trainer = Trainer(generator, critic, generator_optimizer, critic_optimizer, use_cuda=torch.cuda.is_available(),
                       gp_weight=gp_weight, critic_iterations=n_critic_steps, print_every=print_every)
-    trainer.train(train_loader, n_epochs, save_training_gif=False)
+    trainer.train(train_loader, n_epochs, save_training_gif=True)
 
 if __name__ == '__main__':
     main()
