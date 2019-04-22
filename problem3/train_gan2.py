@@ -1,3 +1,4 @@
+from comet_ml import Experiment
 import torch
 import torchvision.datasets
 import torchvision.transforms as transforms

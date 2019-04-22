@@ -1,3 +1,4 @@
+from comet_ml import Experiment
 import imageio
 import numpy as np
 import torch
@@ -22,7 +23,10 @@ class Trainer():
         self.print_every = print_every
         
         # create samples directory
-        exp_id = current_datetime()
+        self.experiment = Experiment(api_key="w7QuiECYXbNiOozveTpjc9uPg", project_name="project3",
+                                workspace="ift6135final")
+        #exp_id = current_datetime()
+        exp_id = self.experiment.id
         self.samples_dir = f"samples/{exp_id}/"
         create_folder(self.samples_dir)
 
@@ -33,6 +37,7 @@ class Trainer():
         # save config params to file
         save_json(vars(args), f"{self.samples_dir}/config.json")
         self.args = args
+        self.experiment.log_parameters(vars(args))
 
         if self.use_cuda:
             self.G.cuda()
@@ -141,7 +146,11 @@ class Trainer():
                 print("Gradient norm: {}".format(self.losses['gradient_norm'][-1]))
                 if self.num_steps > self.critic_iterations:
                     print("G: {}".format(self.losses['G'][-1]))
-                print("Cross entropy loss: {}".format(self.losses['crossent'][-1]))
+                    self.experiment.log_metric('generator_loss', self.losses['G'][-1])
+                # print("Cross entropy loss: {}".format(self.losses['crossent'][-1]))
+                self.experiment.log_metric('critic_loss', self.losses['D'][-1])
+                self.experiment.log_metric('gradient_norm', self.losses['gradient_norm'][-1])
+
 
     def train(self, data_loader, epochs, save_training_gif=True, save_model=True):
         if save_training_gif:
