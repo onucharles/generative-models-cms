@@ -2,7 +2,7 @@ import imageio
 import numpy as np
 import torch
 import torch.nn as nn
-from torchvision.utils import make_grid
+from torchvision.utils import make_grid, save_image
 from torch.autograd import Variable
 from torch.autograd import grad as torch_grad
 
@@ -132,17 +132,18 @@ class Trainer():
             self._train_epoch(data_loader)
 
             if save_training_gif:
-                # Generate batch of images and convert to grid
-                img_grid = make_grid(self.G(fixed_latents).cpu().data)
-                # Convert to numpy and transpose axes to fit imageio convention
-                # i.e. (width, height, channels)
-                img_grid = np.transpose(img_grid.numpy(), (1, 2, 0))
-                # Add image grid to training progress
-                training_progress_images.append(img_grid)
+                # # Generate batch of images and convert to grid
+                # img_grid = make_grid(self.G(fixed_latents).cpu().data)
+                # # Convert to numpy and transpose axes to fit imageio convention
+                # # i.e. (width, height, channels)
+                # img_grid = np.transpose(img_grid.numpy(), (1, 2, 0))
+                # # Add image grid to training progress
+                # training_progress_images.append(img_grid)
+                save_image(self.G(fixed_latents).cpu(), f"samples/generated_train_{epoch}.png")
 
-        if save_training_gif:
-            imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
-                            training_progress_images)
+        # if save_training_gif:
+        #     imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
+        #                     training_progress_images)
 
     def sample_generator(self, num_samples):
         # latent_samples = Variable(self.G.sample_latent(num_samples))
