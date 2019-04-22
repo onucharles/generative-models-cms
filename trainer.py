@@ -37,7 +37,7 @@ class Hyperparameters():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generative Models Training')
-    parser.add_argument('-m', '--model', default="VAEE", type=str,
+    parser.add_argument('-m', '--model', default="VAE", type=str,
                         help='Which model to train (VAE or GAN) (default: VAE)')
 
     
@@ -69,6 +69,8 @@ if __name__ == "__main__":
             lmbda = 10,
             discrim_iters = 5)
         model_folder = (directory + "\\GAN_SVHN_model_tanh")    
+    
+    sample_folder = (model_folder + "\\samples\\samples\\")
 
     train, valid, test = get_data_loader("svhn", hyperparams.batch_size)
     train_samples, _ = next(iter(train))
@@ -85,13 +87,15 @@ if __name__ == "__main__":
         optimizer = optim.Adam(model.parameters(), lr=hyperparams.lr)
         loss_fn = Elbo_Normal()
 
-        train_elbos, val_elbos, epoch_time = VAE_binary.train(model, optimizer, train, valid, loss_fn, epochs=hyperparams.epochs,
+        train_elbos, val_elbos, epoch_time, best_model = VAE_binary.train(model, optimizer, train, valid, loss_fn, epochs=hyperparams.epochs,
                                            save_dir=model_folder, save_interval=hyperparams.save_interval, log_interval=hyperparams.log_interval, 
                                            model_outputs_logits=False, train_samples=train_samples, val_samples=val_samples, random_z=random_z)
 
-        VAE_binary.generate_interpolated_samples(model, model_folder, alphas, interpolate_images=False, random_z_0=random_z_0, random_z_1=random_z_1, 
+        VAE_binary.generate_random_samples(best_model, sample_folder, num_samples=1000, model_outputs_logits=False, samples_per_image=1, generated_random_file='v2')
+
+        VAE_binary.generate_interpolated_samples(best_model, model_folder, alphas, interpolate_images=False, random_z_0=random_z_0, random_z_1=random_z_1, 
                                           epoch=hyperparams.epochs, num_samples=64, latent_size=100, model_outputs_logits=False)
-        VAE_binary.generate_interpolated_samples(model, model_folder, alphas, interpolate_images=True, random_z_0=random_z_0, random_z_1=random_z_1, 
+        VAE_binary.generate_interpolated_samples(best_model, model_folder, alphas, interpolate_images=True, random_z_0=random_z_0, random_z_1=random_z_1, 
                                           epoch=hyperparams.epochs, num_samples=64, latent_size=100, model_outputs_logits=False)
 
     else: #GAN

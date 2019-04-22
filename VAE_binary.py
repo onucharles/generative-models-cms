@@ -120,6 +120,7 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir,
                 save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, True)
                 generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
                                  val_samples=val_samples, random_z=random_z, model_outputs_logits=model_outputs_logits, best=True)
+                best_model = model
 
         if save_interval is not None:
             if epoch % save_interval == 0:
@@ -133,7 +134,7 @@ def train(model, optimizer, train_loader, val_loader, loss_fn, epochs, save_dir,
         save_model(model, optimizer, train_elbos, val_elbos, epoch_time, epoch, save_dir, False)
         generate_samples(model, save_dir=save_dir, epoch=epoch, train_samples=train_samples,
                          val_samples=val_samples, random_z=random_z, model_outputs_logits=model_outputs_logits)
-    return train_elbos, val_elbos, epoch_time[-1]
+    return train_elbos, val_elbos, epoch_time[-1], best_model
 
 
 #Save the model and the training statistics
