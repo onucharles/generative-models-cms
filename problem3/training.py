@@ -20,6 +20,8 @@ class Trainer():
         self.gp_weight = gp_weight
         self.critic_iterations = critic_iterations
         self.print_every = print_every
+        self.samples_dir = f"samples/{current_datetime()}/"
+        create_folder(self.samples_dir)
 
         if self.use_cuda:
             self.G.cuda()
@@ -130,7 +132,8 @@ class Trainer():
         # save 1 batch of original images.
         for i, (x, _) in enumerate(data_loader):
             if i == 0:
-                save_image((x.cpu() + 1) / 2, f"samples/original_sample_{i}.png")
+                save_image((x.cpu() + 1) / 2, f"{self.samples_dir}/original_sample_{i}.png")
+                break
 
         for epoch in range(epochs):
             print("\nEpoch {}".format(epoch + 1))
@@ -144,7 +147,8 @@ class Trainer():
                 # img_grid = np.transpose(img_grid.numpy(), (1, 2, 0))
                 # # Add image grid to training progress
                 # training_progress_images.append(img_grid)
-                save_image((self.G(fixed_latents).cpu() + 1) / 2, f"samples/generated_train_{epoch}.png")
+                # print('sample image: ', (self.G(fixed_latents).cpu() + 1) /2 )
+                save_image((self.G(fixed_latents).cpu() + 1) / 2, f"{self.samples_dir}/generated_train_{epoch}.png")
 
         # if save_training_gif:
         #     imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
@@ -158,7 +162,18 @@ class Trainer():
         generated_data = self.G(latent_samples)
         return generated_data
 
-    def sample(self, num_samples):
-        generated_data = self.sample_generator(num_samples)
-        # Remove color channel
-        return generated_data.data.cpu().numpy()[:, 0, :, :]
+    # def sample(self, num_samples):
+    #     generated_data = self.sample_generator(num_samples)
+    #     # Remove color channel
+    #     return generated_data.data.cpu().numpy()[:, 0, :, :]
+
+import os
+import time
+def create_folder(newpath):
+    if not os.path.exists(newpath):
+        os.makedirs(newpath)
+        print("created directory: " + str(newpath))
+
+def current_datetime():
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    return timestr

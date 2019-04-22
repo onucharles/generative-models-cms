@@ -5,12 +5,18 @@ from torch.utils.data import dataset
 import sys
 from models import Critic, Decoder2
 from training import Trainer
+import argparse
 
 image_transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((.5, .5, .5),
-                         (.5, .5, .5))
+    transforms.Normalize(mean = [0.438, 0.444, 0.473],
+                         std = [0.198, 0.201, 0.197])
+    # transforms.Normalize((.5, .5, .5),
+    #                      (.5, .5, .5))
 ])
+
+# normalize = transforms.Normalize(mean = [0.438, 0.444, 0.473],
+    #                                  std = [0.198, 0.201, 0.197])
 
 def get_data_loader(dataset_location, batch_size):
     trainvalid = torchvision.datasets.SVHN(
@@ -50,19 +56,27 @@ def get_data_loader(dataset_location, batch_size):
     return trainloader, validloader, testloader
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--n_epochs', type=int, default=20)
+    parser.add_argument('--n_critic_steps', type=int, default=5)
+    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--print_every', type=int, default=50)
+    args = parser.parse_args()
+
     critic = Critic(img_size=(32,32,3), dim=16)
     # critic = Critic()
     generator = Decoder2()
     print('critic: ', critic)
     print('generator: ', generator)
 
-    batch_size = 64
-    n_epochs = 10
-    n_critic_steps = 5  # no of steps to train critic before training generator.
-    lr = 1e-4
+    batch_size = args.batch_size
+    n_epochs = args.n_epochs
+    n_critic_steps = args.n_critic_steps  # no of steps to train critic before training generator.
+    lr = args.lr
     z_size = 100
     gp_weight = 10
-    print_every = 50
+    print_every = args.print_every
 
     # get data loaders
     train_loader, valid_loader, test_loader = get_data_loader("data/svhn", batch_size)
