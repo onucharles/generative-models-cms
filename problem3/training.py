@@ -20,8 +20,17 @@ class Trainer():
         self.gp_weight = gp_weight
         self.critic_iterations = critic_iterations
         self.print_every = print_every
-        self.samples_dir = f"samples/{current_datetime()}/"
+        
+        # create samples directory
+        exp_id = current_datetime()
+        self.samples_dir = f"samples/{exp_id}/"
         create_folder(self.samples_dir)
+
+        # create generator and critic model directories
+        create_folder(f"samples/{exp_id}/generator")
+        create_folder(f"samples/{exp_id}/critic")
+
+        # save config params to file
         save_json(vars(args), f"{self.samples_dir}/config.json")
         self.args = args
 
