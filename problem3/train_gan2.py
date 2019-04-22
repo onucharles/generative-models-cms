@@ -9,14 +9,11 @@ import argparse
 
 image_transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize(mean = [0.438, 0.444, 0.473],
-                         std = [0.198, 0.201, 0.197])
-    # transforms.Normalize((.5, .5, .5),
-    #                      (.5, .5, .5))
+    # transforms.Normalize(mean = [0.438, 0.444, 0.473],
+    #                      std = [0.198, 0.201, 0.197])
+    transforms.Normalize((.5, .5, .5),
+                         (.5, .5, .5))
 ])
-
-# normalize = transforms.Normalize(mean = [0.438, 0.444, 0.473],
-    #                                  std = [0.198, 0.201, 0.197])
 
 def get_data_loader(dataset_location, batch_size):
     trainvalid = torchvision.datasets.SVHN(
@@ -84,7 +81,7 @@ def main():
     critic_optimizer = torch.optim.Adam(critic.parameters(), lr=lr, betas=(0.9, 0.99), weight_decay=1e-8)
     generator_optimizer = torch.optim.Adam(generator.parameters(), lr=lr, betas=(0.9, 0.99), weight_decay=1e-8)
 
-    trainer = Trainer(generator, critic, generator_optimizer, critic_optimizer, use_cuda=torch.cuda.is_available(),
+    trainer = Trainer(args, generator, critic, generator_optimizer, critic_optimizer, use_cuda=torch.cuda.is_available(),
                       gp_weight=gp_weight, critic_iterations=n_critic_steps, print_every=print_every)
     trainer.train(train_loader, n_epochs, save_training_gif=True)
 

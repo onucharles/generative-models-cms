@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from torch.autograd import grad as torch_grad
 
 class Trainer():
-    def __init__(self, generator, discriminator, gen_optimizer, dis_optimizer,
+    def __init__(self, args, generator, discriminator, gen_optimizer, dis_optimizer,
                  gp_weight=10, critic_iterations=5, print_every=50,
                  use_cuda=False):
         self.G = generator
@@ -22,6 +22,7 @@ class Trainer():
         self.print_every = print_every
         self.samples_dir = f"samples/{current_datetime()}/"
         create_folder(self.samples_dir)
+        save_json(vars(args), f"{self.samples_dir}/config.json")
 
         if self.use_cuda:
             self.G.cuda()
@@ -169,10 +170,20 @@ class Trainer():
 
 import os
 import time
+import json
 def create_folder(newpath):
     if not os.path.exists(newpath):
         os.makedirs(newpath)
         print("created directory: " + str(newpath))
+
+def save_json(data, file_path):
+    with open(file_path, 'w') as fp:
+        json.dump(data, fp, sort_keys=True, indent=4)
+
+def load_json(file_path):
+    with open(file_path, 'r') as fp:
+        data = json.load(fp)
+    return data
 
 def current_datetime():
     timestr = time.strftime("%Y%m%d-%H%M%S")

@@ -31,7 +31,7 @@ class Critic(nn.Module):
         output_size = int(8 * dim * (img_size[0] / 16) * (img_size[1] / 16))
         self.features_to_prob = nn.Sequential(
             nn.Linear(output_size, 1),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
 
     def forward(self, input_data):
