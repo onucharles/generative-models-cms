@@ -7,6 +7,26 @@ import sys
 from torch.autograd import Variable
 from torchvision.utils import make_grid, save_image
 
+import os
+import time
+import json
+def create_folder(newpath):
+    if not os.path.exists(newpath):
+        os.makedirs(newpath)
+        print("created directory: " + str(newpath))
+
+def save_json(data, file_path):
+    with open(file_path, 'w') as fp:
+        json.dump(data, fp, sort_keys=True, indent=4)
+
+def load_json(file_path):
+    with open(file_path, 'r') as fp:
+        data = json.load(fp)
+    return data
+def current_datetime():
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    return timestr
+
 image_transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((.5, .5, .5),
@@ -62,7 +82,10 @@ def main():
     c_channel_size = 64
     g_channel_size = 64
     penalty_strength = 10
-    samples_dir = 'experiments'
+    samples_dir = 'experimentx'
+    create_folder(samples_dir)
+    create_folder(f"{samples_dir}/generator")
+    create_folder(f"{samples_dir}/critic")
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
