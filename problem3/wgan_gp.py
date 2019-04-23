@@ -9,8 +9,6 @@ class WGAN_GP(nn.Module):
         self.penalty_strength = penalty_strength
         self.img_size = img_size
         self.img_channel_size = img_channel_size
-        # self.critic = Critic(img_size, img_channel_size, c_channel_size).to(device)
-        # self.generator = Generator(z_size, img_size, img_channel_size, g_channel_size).to(device)
         self.critic = Critic()
         self.generator = Decoder2()
         self.device = device

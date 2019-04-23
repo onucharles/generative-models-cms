@@ -27,12 +27,12 @@ class Trainer():
                                 workspace="ift6135final")
         #exp_id = current_datetime()
         exp_id = self.experiment.id
-        self.samples_dir = f"samples/{exp_id}/"
+        self.samples_dir = f"experiment/{exp_id}/"
         create_folder(self.samples_dir)
 
         # create generator and critic model directories
-        create_folder(f"samples/{exp_id}/generator")
-        create_folder(f"samples/{exp_id}/critic")
+        create_folder(f"experiment/{exp_id}/generator")
+        create_folder(f"experiment/{exp_id}/critic")
 
         # save config params to file
         save_json(vars(args), f"{self.samples_dir}/config.json")
