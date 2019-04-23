@@ -4,6 +4,8 @@ import torchvision.transforms as transforms
 from torch.utils.data import dataset
 from wgan_gp import WGAN_GP
 import sys
+from torch.autograd import Variable
+from torchvision.utils import make_grid, save_image
 
 image_transform = transforms.Compose([
     transforms.ToTensor(),
@@ -50,16 +52,17 @@ def get_data_loader(dataset_location, batch_size):
 
 def main():
     # initialise parameters
-    batch_size = 16
-    n_epochs = 10
+    batch_size = 64
+    n_epochs = 50
     n_critic_steps = 2      # no of steps to train critic before training generator.
-    lr = 0.001
+    lr = 1e-4
     z_size = 100
     img_size = 32
     img_channel_size = 3
     c_channel_size = 64
     g_channel_size = 64
     penalty_strength = 10
+    samples_dir = 'experiments'
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
@@ -81,10 +84,22 @@ def main():
     critic_losses = []
     generator_losses = []
     for epoch in range(n_epochs):
+        print('Epoch ', epoch)
+        # fix latents to use to visualisation.
+        fixed_latents = Variable(wgan.generator.sample_latent(64))
+        if use_cuda:
+            fixed_latents = fixed_latents.cuda()
+
+        # save 1 real image
+        for i, (x, _) in enumerate(train_loader):
+            if i == 0:
+                save_image((x.cpu() + 1) / 2, f"{samples_dir}/original_sample_{i}.png")
+                break
+
         wgan.train()
         for i, (x, _) in enumerate(train_loader):
             step_no += 1
-            print('Step: {}----'.format(step_no))
+            # print('Step: {}----'.format(step_no))
             x = x.to(device)
 
             # train critic
@@ -94,7 +109,7 @@ def main():
             critic_optimizer.step()
 
             # save critic loss
-            print('Critic loss: {}'.format(critic_loss.item()))
+            # print('Critic loss: {}'.format(critic_loss.item()))
             critic_losses.append(critic_loss.item())
 
             # train generator every 'n_critic_steps' times.
@@ -106,10 +121,15 @@ def main():
                 generator_optimizer.step()
 
                 # save generator loss
-                print('Generator loss: {}'.format(generator_loss.item()))
+                # print('Generator loss: {}'.format(generator_loss.item()))
                 generator_losses.append(generator_loss.item())
-                sys.exit(0)
-                # generate and save images.
+
+        # generate and save images.
+        # save model
+        torch.save(wgan.generator.state_dict(), f"{samples_dir}/generator/epoch_{epoch}.pt")
+        torch.save(wgan.critic.state_dict(), f"{samples_dir}/critic/epoch_{epoch}.pt")
+        # save image
+        save_image((wgan.generator(fixed_latents).cpu() + 1) / 2, f"{samples_dir}/generated_train_{epoch}.png")
 
         # save checkpoint after every x epochs.
 

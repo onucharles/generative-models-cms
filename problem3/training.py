@@ -7,6 +7,7 @@ from torchvision.utils import make_grid, save_image
 from torch.autograd import Variable
 from torch.autograd import grad as torch_grad
 
+# adapted from https://github.com/EmilienDupont/wgan-gp/blob/master/training.py
 class Trainer():
     def __init__(self, args, generator, discriminator, gen_optimizer, dis_optimizer,
                  gp_weight=10, critic_iterations=5, print_every=50,
@@ -69,16 +70,6 @@ class Trainer():
 
         # Record loss
         self.losses['D'].append(d_loss.item())
-
-        # check cross entropy loss
-        # generate 1s and 0s and stack (target). apply sigmoid to d_real and d_gen and stack. call loss
-        # ones = torch.ones(d_real.size(), dtype=torch.long).cuda() \
-        #     if self.use_cuda else torch.ones(d_real.size(), dtype=torch.long)
-        # targets = torch.cat((ones, 1 - ones))
-        # outputs = torch.cat((nn.Sigmoid()(d_real), nn.Sigmoid()(d_generated)))
-        # print('outputs are:', outputs)
-        # ce_loss = nn.CrossEntropyLoss()(outputs, targets)
-        # self.losses['crossent'].append(ce_loss)
 
     def _generator_train_iteration(self, data):
         """ """
@@ -174,19 +165,7 @@ class Trainer():
                 torch.save(self.G.state_dict(), f"{self.samples_dir}/generator/epoch_{epoch}.pt")
                 torch.save(self.D.state_dict(), f"{self.samples_dir}/critic/epoch_{epoch}.pt")
             if save_training_gif:
-                # # Generate batch of images and convert to grid
-                # img_grid = make_grid(self.G(fixed_latents).cpu().data)
-                # # Convert to numpy and transpose axes to fit imageio convention
-                # # i.e. (width, height, channels)
-                # img_grid = np.transpose(img_grid.numpy(), (1, 2, 0))
-                # # Add image grid to training progress
-                # training_progress_images.append(img_grid)
-                # print('sample image: ', (self.G(fixed_latents).cpu() + 1) /2 )
                 save_image((self.G(fixed_latents).cpu() + 1) / 2, f"{self.samples_dir}/generated_train_{epoch}.png")
-
-        # if save_training_gif:
-        #     imageio.mimsave('./training_{}_epochs.gif'.format(epochs),
-        #                     training_progress_images)
 
     def sample_generator(self, num_samples):
         # latent_samples = Variable(self.G.sample_latent(num_samples))
@@ -195,11 +174,6 @@ class Trainer():
             latent_samples = latent_samples.cuda()
         generated_data = self.G(latent_samples)
         return generated_data
-
-    # def sample(self, num_samples):
-    #     generated_data = self.sample_generator(num_samples)
-    #     # Remove color channel
-    #     return generated_data.data.cpu().numpy()[:, 0, :, :]
 
 import os
 import time

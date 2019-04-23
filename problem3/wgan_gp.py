@@ -9,7 +9,7 @@ class WGAN_GP(nn.Module):
         self.penalty_strength = penalty_strength
         self.img_size = img_size
         self.img_channel_size = img_channel_size
-        self.critic = Critic()
+        self.critic = Critic(img_size=(32,32,3), dim=16)
         self.generator = Decoder2()
         self.device = device
 
@@ -52,7 +52,7 @@ class WGAN_GP(nn.Module):
                                         create_graph=True, retain_graph=True)[0]
 
         norm_grad = torch.sqrt(torch.sum(gradients ** 2, dim=1) + 1e-12)
-        print('gradient norm is: ', norm_grad.mean().item())
+        # print('gradient norm is: ', norm_grad.mean().item())
         grad_penalty = self.penalty_strength * torch.mean(torch.pow((norm_grad - 1), 2))
 
         return grad_penalty
