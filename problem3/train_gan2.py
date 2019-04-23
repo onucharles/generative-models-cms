@@ -57,7 +57,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--n_epochs', type=int, default=20)
     parser.add_argument('--n_critic_steps', type=int, default=5)
-    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--g_lr', type=float, default=1e-4)
+    parser.add_argument('--c_lr', type=float, default=1e-4)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--print_every', type=int, default=50)
     parser.add_argument('--save_model', type=bool, default=True)
@@ -82,7 +83,8 @@ def main():
     batch_size = args.batch_size
     n_epochs = args.n_epochs
     n_critic_steps = args.n_critic_steps  # no of steps to train critic before training generator.
-    lr = args.lr
+    g_lr = args.g_lr
+    c_lr = args.c_lr
     z_size = 100
     gp_weight = 10
     print_every = args.print_every
@@ -93,8 +95,8 @@ def main():
     # get data loaders
     train_loader, valid_loader, test_loader = get_data_loader("data/svhn", batch_size)
 
-    critic_optimizer = torch.optim.Adam(critic.parameters(), lr=lr, betas=(beta1, beta2), weight_decay=0)
-    generator_optimizer = torch.optim.Adam(generator.parameters(), lr=lr, betas=(beta1, beta2), weight_decay=0)
+    critic_optimizer = torch.optim.Adam(critic.parameters(), lr=c_lr, betas=(beta1, beta2), weight_decay=0)
+    generator_optimizer = torch.optim.Adam(generator.parameters(), lr=g_lr, betas=(beta1, beta2), weight_decay=0)
 
     trainer = Trainer(args, generator, critic, generator_optimizer, critic_optimizer, use_cuda=torch.cuda.is_available(),
                       gp_weight=gp_weight, critic_iterations=n_critic_steps, print_every=print_every)
